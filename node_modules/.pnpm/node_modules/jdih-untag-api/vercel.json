@@ -4,6 +4,14 @@
         {
             "source": "/api/(.*)",
             "destination": "/src/api/src/server.js"
+        },
+        {
+            "source": "/uploads/(.*)",
+            "destination": "/src/api/src/server.js"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/src/frontend/dist/$1"
         }
     ]
 }
