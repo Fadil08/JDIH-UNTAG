@@ -1,0 +1,28 @@
+{
+  "overview": "Website JDIH (Jaringan Dokumentasi dan Informasi Hukum) Kampus UNTAG Banyuwangi — portal resmi untuk dokumentasi, pengelolaan, dan penyebaran produk hukum kampus secara tertib dan transparan.",
+  "features": [
+    "Katalog produk hukum dengan filter dan pencarian",
+    "Download dokumen PDF publik tanpa login",
+    "Detail dokumen dengan metadata lengkap",
+    "Berita dan pengumuman JDIH",
+    "Halaman Tentang dan Kontak",
+    "Panel admin terlindungi via Internet Identity",
+    "Kelola dokumen, kategori, dan berita",
+    "Upload PDF via object storage",
+    "Statistik dokumen dan unduhan",
+    "Desain profesional dengan warna identitas UNTAG Banyuwangi",
+    "Responsif mobile dan desktop",
+    "Seluruh UI dalam Bahasa Indonesia"
+  ],
+  "category": "productivity",
+  "tags": [
+    "jdih",
+    "legal",
+    "document-management",
+    "government",
+    "university",
+    "indonesia",
+    "untag-banyuwangi"
+  ],
+  "last_updated": "2026-04-20T04:22:48.815Z"
+}

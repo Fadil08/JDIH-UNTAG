@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+.mops/
+.vessel/
+lib/
+
+# Build outputs
+dist/
+build/
+.dfx/
+canisters/
+*.did
+*.wasm
+
+# Environment variables & Logs
+.env
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
