@@ -7,12 +7,14 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// ── Pastikan folder uploads ada ─────────────────────────────────────────────
+// ── Pastikan folder uploads ada (Hanya dijalankan di Lokal, bukan di Vercel/Production) ──
 const uploadDir = path.join(__dirname, '..', process.env.UPLOAD_DIR || 'uploads');
-['pdf', 'gambar'].forEach(sub => {
-  const dir = path.join(uploadDir, sub);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-});
+if (process.env.NODE_ENV !== 'production') {
+  ['pdf', 'gambar'].forEach(sub => {
+    const dir = path.join(uploadDir, sub);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  });
+}
 
 // ── Middleware global ────────────────────────────────────────────────────────
 app.use(cors({

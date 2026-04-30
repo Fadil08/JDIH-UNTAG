@@ -21,7 +21,7 @@ pool.getConnection()
   })
   .catch(err => {
     console.error('❌ Gagal koneksi ke database:', err.message);
-    process.exit(1);
+    console.error('Pastikan Environment Variables DB sudah diatur di Vercel Dashboard.');
   });
 
 module.exports = pool;
