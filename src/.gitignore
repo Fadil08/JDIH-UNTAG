@@ -2,7 +2,7 @@
 node_modules/
 .mops/
 .vessel/
-lib/
+backend/lib/
 
 # Build outputs
 dist/
