@@ -560,7 +560,7 @@ export const api = {
     get: () => apiFetch<Settings>('/api/settings'),
     update: (input: SettingsInput) => {
       const { logo, ...rest } = input;
-      const fd = buildFormData(rest, 'logo', logo);
+      const fd = buildFormData(rest, 'logo', logo || undefined);
       return apiFetch<{ success: boolean }>('/api/settings', { method: 'PUT', body: fd });
     },
   },

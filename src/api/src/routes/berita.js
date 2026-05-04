@@ -1,7 +1,9 @@
 const router = require('express').Router();
 const db = require('../db');
 const { authMiddleware, requireMenu } = require('../middleware/auth');
-const { uploadGambar, deleteFile } = require('../middleware/upload');
+const { uploadGambar } = require('../middleware/upload');
+const { uploadToR2, deleteFromR2, buildUrl } = require('../utils/r2Storage');
+
 
 function formatArtikel(row) {
   return {
@@ -10,13 +12,15 @@ function formatArtikel(row) {
     konten: row.konten,
     ringkasan: row.ringkasan,
     author: row.author,
-    gambar: row.gambar ? `/uploads/gambar/${row.gambar}` : null,
+    gambar: buildUrl(row.gambar, 'gambar'),
     status: row.status,
     tanggal: row.tanggal,
     tanggalPublikasi: row.tanggal_publikasi,
     tags: row.tags || [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    createdBy: row.created_by,
+    lastModifiedBy: row.last_modified_by || null,
   };
 }
 
@@ -88,7 +92,17 @@ router.post('/', authMiddleware, requireMenu('berita:create'), uploadGambar.sing
     const { judul, konten, ringkasan, author, status, tanggalPublikasi, tags: rawTags } = req.body;
     if (!judul || !konten) return res.status(400).json({ error: 'Judul dan konten wajib diisi' });
 
-    const gambar = req.file ? req.file.filename : null;
+    // Upload gambar ke R2 jika ada
+    let gambar = null;
+    if (req.file) {
+      const r2File = await uploadToR2(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        'gambar'
+      );
+      gambar = r2File.key; // Simpan R2 key ke DB
+    }
     const tags = Array.isArray(rawTags) ? rawTags : (rawTags ? rawTags.split(',').map(t => t.trim()).filter(Boolean) : []);
 
     // Pastikan tanggal_publikasi valid — null jika kosong/tidak valid
@@ -113,9 +127,8 @@ router.post('/', authMiddleware, requireMenu('berita:create'), uploadGambar.sing
     res.status(201).json(formatArtikel({ ...rows[0], tags }));
   } catch (err) {
     await conn.rollback();
-    if (req.file) deleteFile(`gambar/${req.file.filename}`);
-    console.error(err);
-    res.status(500).json({ error: 'Gagal menyimpan berita' });
+    console.error('[POST /api/berita] Error:', err instanceof Error ? err.message : err);
+    res.status(500).json({ error: 'Gagal menyimpan berita', detail: err instanceof Error ? err.message : 'Unknown error' });
   } finally {
     conn.release();
   }
@@ -140,8 +153,17 @@ router.put('/:id', authMiddleware, requireMenu('berita:edit'), uploadGambar.sing
 
     let gambar = existing[0].gambar;
     if (req.file) {
-      if (gambar) deleteFile(`gambar/${gambar}`);
-      gambar = req.file.filename;
+      // Hapus gambar lama dari R2 jika format baru
+      if (gambar && (gambar.startsWith('pdf/') || gambar.startsWith('gambar/'))) {
+        await deleteFromR2(gambar);
+      }
+      const r2File = await uploadToR2(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        'gambar'
+      );
+      gambar = r2File.key;
     }
     const tags = Array.isArray(rawTags) ? rawTags : (rawTags ? rawTags.split(',').map(t => t.trim()).filter(Boolean) : []);
 
@@ -155,8 +177,8 @@ router.put('/:id', authMiddleware, requireMenu('berita:edit'), uploadGambar.sing
     }
 
     await conn.query(
-      'UPDATE artikel SET judul=?, konten=?, ringkasan=?, author=?, gambar=?, status=?, tanggal_publikasi=? WHERE id=?',
-      [judul, konten, ringkasan || '', author || '', gambar, status || 'Terbit', pubDate, req.params.id]
+      'UPDATE artikel SET judul=?, konten=?, ringkasan=?, author=?, gambar=?, status=?, tanggal_publikasi=?, last_modified_by=? WHERE id=?',
+      [judul, konten, ringkasan || '', author || '', gambar, status || 'Terbit', pubDate, req.user.id, req.params.id]
     );
     await saveTags(conn, req.params.id, tags);
     await conn.query(
@@ -169,13 +191,13 @@ router.put('/:id', authMiddleware, requireMenu('berita:edit'), uploadGambar.sing
     res.json(formatArtikel({ ...rows[0], tags }));
   } catch (err) {
     await conn.rollback();
-    if (req.file) deleteFile(`gambar/${req.file.filename}`);
-    console.error(err);
-    res.status(500).json({ error: 'Gagal mengupdate berita' });
+    console.error('[PUT /api/berita] Error:', err instanceof Error ? err.message : err);
+    res.status(500).json({ error: 'Gagal mengupdate berita', detail: err instanceof Error ? err.message : 'Unknown error' });
   } finally {
     conn.release();
   }
 });
+
 
 // ── DELETE /api/berita/:id ────────────────────────────────────────────────────
 router.delete('/:id', authMiddleware, requireMenu('berita:delete'), async (req, res) => {
@@ -192,8 +214,10 @@ router.delete('/:id', authMiddleware, requireMenu('berita:delete'), async (req, 
       return res.status(403).json({ error: 'Akses ditolak: Anda tidak dapat menghapus berita orang lain' });
     }
 
-    if (rows[0].gambar) deleteFile(`gambar/${rows[0].gambar}`);
-    await conn.query('DELETE FROM artikel WHERE id = ?', [req.params.id]);
+    // Hapus gambar lama dari R2 jika format baru
+    if (rows[0].gambar && (rows[0].gambar.startsWith('pdf/') || rows[0].gambar.startsWith('gambar/'))) {
+      await deleteFromR2(rows[0].gambar);
+    }    await conn.query('DELETE FROM artikel WHERE id = ?', [req.params.id]);
     await conn.query(
       'INSERT INTO activity_log (action, target_type, target_id, target_title, performed_by) VALUES (?, ?, ?, ?, ?)',
       ['Menghapus berita', 'berita', req.params.id, rows[0].judul, req.user.id]

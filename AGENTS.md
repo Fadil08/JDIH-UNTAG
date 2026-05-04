@@ -8,10 +8,10 @@
 
 **Frontend** (run from `src/frontend/`):
 
-- **install**: `pnpm install --prefer-offline`
-- **typecheck**: `pnpm typecheck`
-- **lint fix**: `pnpm fix`
-- **build**: `pnpm build`
+- **install**: `npm install`
+- **typecheck**: `npm run typecheck`
+- **lint fix**: `npm run fix`
+- **build**: `npm run build`
 
 **Backend** (run from `src/backend/`):
 
@@ -21,7 +21,7 @@
 
 **Backend and frontend integration** (run from root):
 
-- **generate bindings**: `pnpm bindgen` This step is necessary to ensure the frontend can call the backend methods.
+- **generate bindings**: `npm run bindgen` This step is necessary to ensure the frontend can call the backend methods.
 
 ## Learnings
 

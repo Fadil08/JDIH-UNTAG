@@ -58,9 +58,8 @@ export function StatistikPublik() {
   return (
     <Layout>
       <PageHeader 
-        title="Statistik JDIH" 
-        description="Visualisasi data terkait jumlah dan perkembangan produk hukum yang terdata dalam sistem Jaringan Dokumentasi dan Informasi Hukum."
-        icon={<TrendingUp className="w-8 h-8 opacity-80" />}
+        title="Statistik & Data" 
+        description="Visualisasi data JDIH dalam angka"
       />
 
       <div className="container mx-auto px-4 py-12 space-y-12">

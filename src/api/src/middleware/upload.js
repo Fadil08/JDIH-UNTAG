@@ -1,26 +1,11 @@
 const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 
-const uploadDir = path.join(__dirname, '..', '..', process.env.UPLOAD_DIR || 'uploads');
+// ── Gunakan Memory Storage ────────────────────────────────────────────────────
+// File disimpan sementara di RAM lalu dikirim ke Google Drive.
+// Ini diperlukan karena Vercel tidak mendukung penyimpanan file ke disk.
+const memoryStorage = multer.memoryStorage();
 
-// ── Storage untuk PDF ─────────────────────────────────────────────────────────
-const pdfStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(uploadDir, 'pdf');
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const base = path.basename(file.originalname, ext)
-      .replace(/[^a-zA-Z0-9_\-]/g, '_')
-      .slice(0, 80);
-    const unique = `${Date.now()}_${base}${ext}`;
-    cb(null, unique);
-  },
-});
-
+// ── Filter untuk PDF ──────────────────────────────────────────────────────────
 const pdfFilter = (req, file, cb) => {
   if (file.mimetype === 'application/pdf') {
     cb(null, true);
@@ -29,23 +14,7 @@ const pdfFilter = (req, file, cb) => {
   }
 };
 
-// ── Storage untuk Gambar ──────────────────────────────────────────────────────
-const gambarStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(uploadDir, 'gambar');
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const base = path.basename(file.originalname, ext)
-      .replace(/[^a-zA-Z0-9_\-]/g, '_')
-      .slice(0, 80);
-    const unique = `${Date.now()}_${base}${ext}`;
-    cb(null, unique);
-  },
-});
-
+// ── Filter untuk Gambar ───────────────────────────────────────────────────────
 const gambarFilter = (req, file, cb) => {
   const allowed = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
   if (allowed.includes(file.mimetype)) {
@@ -58,28 +27,21 @@ const gambarFilter = (req, file, cb) => {
 const maxSize = parseInt(process.env.MAX_FILE_SIZE || '52428800'); // 50MB default
 
 const uploadPdf = multer({
-  storage: pdfStorage,
+  storage: memoryStorage,
   fileFilter: pdfFilter,
   limits: { fileSize: maxSize },
 });
 
 const uploadGambar = multer({
-  storage: gambarStorage,
+  storage: memoryStorage,
   fileFilter: gambarFilter,
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB untuk gambar
 });
 
-/**
- * Hapus file lama dari disk jika ada.
- */
+// Stub deleteFile untuk backward compat — penghapusan sekarang lewat googleDrive.js
 function deleteFile(filePath) {
-  if (!filePath) return;
-  const abs = path.join(uploadDir, filePath.replace('/uploads/', ''));
-  if (fs.existsSync(abs)) {
-    fs.unlink(abs, err => {
-      if (err) console.warn('Gagal hapus file lama:', err.message);
-    });
-  }
+  // Tidak ada operasi disk; penghapusan dari Drive dilakukan
+  // secara langsung di masing-masing route menggunakan deleteFromDrive(fileId)
 }
 
 module.exports = { uploadPdf, uploadGambar, deleteFile };

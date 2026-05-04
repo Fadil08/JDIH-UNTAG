@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle,
   CheckCircle,
@@ -63,16 +63,18 @@ import {
 import { usePermissions } from "../../hooks/usePermissions";
 import type { StatusDokumen, WorkflowStatus, WorkflowLog } from "../../types";
 import { TAHUN_OPTIONS, WORKFLOW_STATUS_LABEL, STATUS_LABEL } from "../../types";
-import { useQuery } from "@tanstack/react-query";
 import { X, Badge, Download } from "lucide-react";
 import * as XLSX from "xlsx";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function truncatePrincipal(principal: string): string {
+function truncatePrincipal(principal: string | number | null | undefined): string {
   if (!principal) return "-";
-  if (principal.length <= 12) return principal;
-  return `${principal.slice(0, 12)}...`;
+  const str = String(principal);
+  if (str.length <= 12) return str;
+  return `${str.slice(0, 12)}...`;
 }
 
 // ─── Form State ───────────────────────────────────────────────────────────────
@@ -136,12 +138,12 @@ const WORKFLOW_FILTER_OPTIONS: Array<{
   value: WorkflowStatus | "all";
   label: string;
 }> = [
-  { value: "all", label: "Semua Status Alur" },
-  { value: "Draft", label: WORKFLOW_STATUS_LABEL.Draft },
-  { value: "PendingReview", label: WORKFLOW_STATUS_LABEL.PendingReview },
-  { value: "Published", label: WORKFLOW_STATUS_LABEL.Published },
-  { value: "Archived", label: WORKFLOW_STATUS_LABEL.Archived },
-];
+    { value: "all", label: "Semua Status Alur" },
+    { value: "Draft", label: WORKFLOW_STATUS_LABEL.Draft },
+    { value: "PendingReview", label: WORKFLOW_STATUS_LABEL.PendingReview },
+    { value: "Published", label: WORKFLOW_STATUS_LABEL.Published },
+    { value: "Archived", label: WORKFLOW_STATUS_LABEL.Archived },
+  ];
 
 // ─── Return To Draft Sub-form ─────────────────────────────────────────────────
 
@@ -357,30 +359,30 @@ function WorkflowHistory({ dokumenId }: { dokumenId: string | number }) {
         <div key={log.id} className="relative pl-6 pb-4 last:pb-0 border-l border-border last:border-0 ml-2">
           {/* Timeline dot */}
           <div className="absolute left-[-5px] top-1 w-2.5 h-2.5 rounded-full bg-accent ring-4 ring-background" />
-          
+
           <div className="bg-muted/30 rounded-lg p-3 border border-border/50">
             <div className="flex items-center justify-between mb-1">
-               <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
-                 {log.action}
-               </span>
-               <span className="text-[10px] text-muted-foreground">
-                 {new Date(log.created_at).toLocaleString('id-ID')}
-               </span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-accent">
+                {log.action}
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                {new Date(log.created_at).toLocaleString('id-ID')}
+              </span>
             </div>
-            
+
             {log.message && (
               <p className="text-xs text-foreground mb-2 italic">
                 "{log.message}"
               </p>
             )}
-            
+
             <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/30">
-               <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent">
-                 {log.user_nama?.[0] || 'U'}
-               </div>
-               <span className="text-[10px] font-medium text-muted-foreground">
-                 {log.user_nama} • <span className="uppercase">{log.user_role}</span>
-               </span>
+              <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent">
+                {log.user_nama?.[0] || 'U'}
+              </div>
+              <span className="text-[10px] font-medium text-muted-foreground">
+                {log.user_nama} • <span className="uppercase">{log.user_role}</span>
+              </span>
             </div>
           </div>
         </div>
@@ -390,63 +392,63 @@ function WorkflowHistory({ dokumenId }: { dokumenId: string | number }) {
 }
 // ─── Relation Selector Component ──────────────────────────────────────────────
 
-function RelationSelector({ 
-    onAdd 
-}: { 
-    onAdd: (doc: { id: number; judul: string; nomor: string }) => void 
+function RelationSelector({
+  onAdd
+}: {
+  onAdd: (doc: { id: number; judul: string; nomor: string }) => void
 }) {
-    const [query, setQuery] = useState("");
-    const [results, setResults] = useState<any[]>([]);
-    const [loading, setLoading] = useState(false);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-    async function handleSearch() {
-        if (!query.trim()) return;
-        setLoading(true);
-        try {
-            const data = await api.dokumen.listAdmin({ query: query.trim() });
-            setResults(data);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-        }
+  async function handleSearch() {
+    if (!query.trim()) return;
+    setLoading(true);
+    try {
+      const data = await api.dokumen.listAdmin({ query: query.trim() });
+      setResults(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
+  }
 
-    return (
-        <div className="space-y-2 border border-border rounded-lg p-3 bg-muted/20">
-            <div className="flex gap-2">
-                <Input 
-                    value={query}
-                    onChange={e => setQuery(e.target.value)}
-                    placeholder="Cari judul/nomor dokumen..."
-                    className="h-8 text-xs"
-                    onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                />
-                <Button size="sm" className="h-8 px-3 text-xs" onClick={handleSearch} disabled={loading}>
-                    {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Cari'}
-                </Button>
-            </div>
-            {results.length > 0 && (
-                <div className="max-h-40 overflow-y-auto border border-border rounded bg-background">
-                    {results.map(r => (
-                        <button
-                            key={r.id}
-                            type="button"
-                            className="w-full text-left p-2 hover:bg-muted text-xs border-b last:border-0 border-border"
-                            onClick={() => {
-                                onAdd({ id: r.id, judul: r.judul, nomor: r.nomor });
-                                setResults([]);
-                                setQuery("");
-                            }}
-                        >
-                            <div className="font-bold">{r.nomor}</div>
-                            <div className="truncate">{r.judul}</div>
-                        </button>
-                    ))}
-                </div>
-            )}
+  return (
+    <div className="space-y-2 border border-border rounded-lg p-3 bg-muted/20">
+      <div className="flex gap-2">
+        <Input
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Cari judul/nomor dokumen..."
+          className="h-8 text-xs"
+          onKeyDown={e => e.key === 'Enter' && handleSearch()}
+        />
+        <Button size="sm" className="h-8 px-3 text-xs" onClick={handleSearch} disabled={loading}>
+          {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Cari'}
+        </Button>
+      </div>
+      {results.length > 0 && (
+        <div className="max-h-40 overflow-y-auto border border-border rounded bg-background">
+          {results.map(r => (
+            <button
+              key={r.id}
+              type="button"
+              className="w-full text-left p-2 hover:bg-muted text-xs border-b last:border-0 border-border"
+              onClick={() => {
+                onAdd({ id: r.id, judul: r.judul, nomor: r.nomor });
+                setResults([]);
+                setQuery("");
+              }}
+            >
+              <div className="font-bold">{r.nomor}</div>
+              <div className="truncate">{r.judul}</div>
+            </button>
+          ))}
         </div>
-    );
+      )}
+    </div>
+  );
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -478,6 +480,7 @@ export function AdminDokumen() {
     kategoriId: kategoriFilter === "all" ? undefined : Number(kategoriFilter),
   });
   const { data: kategoriList } = useKategori();
+  const { data: statusList } = useStatus();
   const deleteDokumen = useDeleteDokumen();
 
   const [showForm, setShowForm] = useState(false);
@@ -543,10 +546,10 @@ export function AdminDokumen() {
       abstrak: doc.abstrak,
       tags: (doc.tag ?? []).join(", "),
       file: null,
-      relatedDocs: (doc as any).relations ? (doc as any).relations.filter((r:any) => r.arah === 'outbound').map((r:any) => ({
-          target_id: r.id,
-          tipe_relasi: r.tipe_relasi,
-          judul: r.judul
+      relatedDocs: (doc as any).relations ? (doc as any).relations.filter((r: any) => r.arah === 'outbound').map((r: any) => ({
+        target_id: r.id,
+        tipe_relasi: r.tipe_relasi,
+        judul: r.judul
       })) : [],
       pesanPerubahan: "",
     });
@@ -638,7 +641,7 @@ export function AdminDokumen() {
       toast.error("Tidak ada data untuk diekspor");
       return;
     }
-    
+
     // Siapkan data untuk diekspor
     const exportData = dokumen.map((doc: any, index: number) => ({
       "No": index + 1,
@@ -661,12 +664,12 @@ export function AdminDokumen() {
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Data Dokumen");
-    
+
     // Sesuaikan lebar kolom
     const wscols = [
-      {wch: 5}, {wch: 40}, {wch: 25}, {wch: 8}, {wch: 20},
-      {wch: 15}, {wch: 15}, {wch: 15}, {wch: 15}, {wch: 30},
-      {wch: 20}, {wch: 20}, {wch: 20}, {wch: 10}
+      { wch: 5 }, { wch: 40 }, { wch: 25 }, { wch: 8 }, { wch: 20 },
+      { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 30 },
+      { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 10 }
     ];
     worksheet['!cols'] = wscols;
 
@@ -869,6 +872,35 @@ export function AdminDokumen() {
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>
                       )}
+                      {/* Tombol Download PDF */}
+                      {doc.filePdf ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 border border-border text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          title="Download PDF"
+                          onClick={async () => {
+                            try {
+                              await api.dokumen.download(doc.id);
+                            } catch { /* ignore counter error */ }
+                            window.open(doc.filePdf!, '_blank');
+                          }}
+                          data-ocid={`admin_dokumen.download_button.${idx + 1}`}
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 border border-border opacity-30 cursor-not-allowed"
+                          title="Tidak ada file PDF"
+                          disabled
+                          data-ocid={`admin_dokumen.download_button_disabled.${idx + 1}`}
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
                       {can('dokumen:delete') && (
                         <Button
                           variant="ghost"
@@ -883,6 +915,7 @@ export function AdminDokumen() {
                         </Button>
                       )}
                     </div>
+
                   </div>
                 </div>
               );
@@ -895,466 +928,466 @@ export function AdminDokumen() {
       {showForm && (
         <div className="fixed inset-0 lg:left-64 z-[40] bg-zinc-50 overflow-y-auto px-4 py-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
           <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-4 mb-6">
-            <Button
-              variant="outline"
-              onClick={() => !saving && setShowForm(false)}
-              disabled={saving}
-            >
-              Kembali
-            </Button>
-            <h1 className="font-display font-bold text-2xl text-foreground">
-              {editId ? "Edit Dokumen" : "Tambah Dokumen"}
-            </h1>
-          </div>
-
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-            <div className="space-y-6">
-            {/* Catatan Koreksi (read-only, shown if not empty) */}
-            {editId && editCatatanKoreksi && (
-              <div
-                className="rounded-lg border border-yellow-300 bg-yellow-50 p-3"
-                data-ocid="admin_dokumen.catatan_koreksi_panel"
-              >
-                <p className="text-xs font-semibold text-yellow-800 mb-1">
-                  Catatan Koreksi dari Super Admin
-                </p>
-                <p className="text-xs text-yellow-700 whitespace-pre-wrap">
-                  {editCatatanKoreksi}
-                </p>
-              </div>
-            )}
-
-            {/* Judul */}
-            <div>
-              <Label htmlFor="dok-judul" className="text-sm font-medium">
-                Judul <span className="text-accent">*</span>
-              </Label>
-              <Input
-                id="dok-judul"
-                value={form.judul}
-                onChange={(e) => setField("judul", e.target.value)}
-                placeholder="Masukkan judul dokumen"
-                className="mt-1 text-sm"
-                data-ocid="admin_dokumen.judul_input"
-              />
-              {errors.judul && (
-                <p
-                  className="text-xs text-accent mt-1"
-                  data-ocid="admin_dokumen.judul.field_error"
-                >
-                  {errors.judul}
-                </p>
-              )}
-            </div>
-
-            {/* Nomor */}
-            <div>
-              <Label htmlFor="dok-nomor" className="text-sm font-medium">
-                Nomor Dokumen <span className="text-accent">*</span>
-              </Label>
-              <Input
-                id="dok-nomor"
-                value={form.nomor}
-                onChange={(e) => setField("nomor", e.target.value)}
-                placeholder="cth. SK/001/UNTAG-BWI/2024"
-                className="mt-1 text-sm"
-                data-ocid="admin_dokumen.nomor_input"
-              />
-              {errors.nomor && (
-                <p
-                  className="text-xs text-accent mt-1"
-                  data-ocid="admin_dokumen.nomor.field_error"
-                >
-                  {errors.nomor}
-                </p>
-              )}
-            </div>
-
-            {/* Kategori & Tahun */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label className="text-sm font-medium">
-                  Kategori <span className="text-accent">*</span>
-                </Label>
-                <Select
-                  value={form.kategoriId}
-                  onValueChange={(v) => setField("kategoriId", v)}
-                >
-                  <SelectTrigger
-                    className="mt-1 text-sm"
-                    data-ocid="admin_dokumen.kategori_select"
-                  >
-                    <SelectValue placeholder="Pilih kategori" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(kategoriList ?? []).map((k) => (
-                      <SelectItem key={k.id} value={String(k.id)}>
-                        {k.nama}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.kategoriId && (
-                  <p
-                    className="text-xs text-accent mt-1"
-                    data-ocid="admin_dokumen.kategori.field_error"
-                  >
-                    {errors.kategoriId}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium">Tahun</Label>
-                <Select
-                  value={form.tahun}
-                  onValueChange={(v) => setField("tahun", v)}
-                >
-                  <SelectTrigger
-                    className="mt-1 text-sm"
-                    data-ocid="admin_dokumen.tahun_select"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TAHUN_OPTIONS.map((y) => (
-                      <SelectItem key={String(y)} value={String(y)}>
-                        {y}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Tanggal & Status */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="dok-tgl" className="text-sm font-medium">
-                  Tanggal Penetapan <span className="text-accent">*</span>
-                </Label>
-                <Input
-                  id="dok-tgl"
-                  type="date"
-                  value={form.tanggalPenetapan}
-                  onChange={(e) => setField("tanggalPenetapan", e.target.value)}
-                  className="mt-1 text-sm"
-                  data-ocid="admin_dokumen.tanggal_input"
-                />
-                {errors.tanggalPenetapan && (
-                  <p
-                    className="text-xs text-accent mt-1"
-                    data-ocid="admin_dokumen.tanggal.field_error"
-                  >
-                    {errors.tanggalPenetapan}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label className="text-sm font-medium">Status Keberlakuan Utama</Label>
-                <Select
-                  value={form.status}
-                  onValueChange={(v) => setField("status", v as StatusDokumen)}
-                >
-                  <SelectTrigger
-                    className="mt-1 text-sm font-semibold text-accent"
-                    data-ocid="admin_dokumen.status_select"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(statusList ?? []).map((st) => (
-                        <SelectItem key={st.id} value={st.nama}>{st.nama}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Simlink / Dokumen Terkait Section */}
-            <div className="rounded-xl border border-border bg-muted/10 p-5 space-y-4">
-                <div className="flex items-center justify-between">
-                    <Label className="text-sm font-bold flex items-center gap-2">
-                        <CheckCircle className="w-4 h-4 text-accent" />
-                        Simlink: Hubungkan dengan Dokumen Lain <span className="text-muted-foreground font-normal text-xs">(opsional)</span>
-                    </Label>
-                </div>
-                
-                {form.relatedDocs.length > 0 && (
-                    <div className="space-y-2">
-                        {form.relatedDocs.map((rel, idx) => (
-                            <div key={idx} className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg shadow-sm animate-in fade-in zoom-in-95 duration-200">
-                                <Select
-                                    value={rel.tipe_relasi}
-                                    onValueChange={v => {
-                                        const newRels = [...form.relatedDocs];
-                                        newRels[idx].tipe_relasi = v;
-                                        setField('relatedDocs', newRels);
-                                    }}
-                                >
-                                    <SelectTrigger className="w-32 h-8 text-xs font-bold uppercase">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Mencabut">Mencabut</SelectItem>
-                                        <SelectItem value="Mengubah">Mengubah</SelectItem>
-                                        <SelectItem value="Menjabarkan">Menjabarkan</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold text-foreground truncate">{rel.judul}</p>
-                                </div>
-
-                                <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-7 w-7 text-muted-foreground hover:text-accent hover:bg-accent/5"
-                                    onClick={() => {
-                                        const newRels = form.relatedDocs.filter((_, i) => i !== idx);
-                                        setField('relatedDocs', newRels);
-                                    }}
-                                >
-                                    <X className="w-4 h-4" />
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                )}
-
-                <RelationSelector 
-                    onAdd={(doc) => {
-                        if (form.relatedDocs.some(r => r.target_id === doc.id)) {
-                            toast.error("Dokumen sudah ada dalam daftar relasi");
-                            return;
-                        }
-                        const newRel = { target_id: doc.id, tipe_relasi: 'Mencabut', judul: doc.judul };
-                        setField('relatedDocs', [...form.relatedDocs, newRel]);
-                    }}
-                />
-                <p className="text-[10px] text-muted-foreground italic">
-                    * Simlink memungkinkan JDIH menghubungkan riwayat hukum secara otomatis antar peraturan.
-                </p>
-            </div>
-
-            {/* Tanggal Pengundangan */}
-            <div>
-              <Label
-                htmlFor="dok-tgl-pengundangan"
-                className="text-sm font-medium"
-              >
-                Tanggal Pengundangan{" "}
-                <span className="text-muted-foreground font-normal">
-                  (opsional)
-                </span>
-              </Label>
-              <Input
-                id="dok-tgl-pengundangan"
-                type="date"
-                value={form.tanggalPengundangan}
-                onChange={(e) =>
-                  setField("tanggalPengundangan", e.target.value)
-                }
-                className="mt-1 text-sm"
-                data-ocid="admin_dokumen.tanggal_pengundangan_input"
-              />
-            </div>
-
-            {/* Relasi Hukum */}
-            <div>
-              <Label htmlFor="dok-relasi-hukum" className="text-sm font-medium">
-                Relasi Dengan Produk Hukum Lain{" "}
-                <span className="text-muted-foreground font-normal">
-                  (opsional)
-                </span>
-              </Label>
-              <Textarea
-                id="dok-relasi-hukum"
-                value={form.relasiHukum}
-                onChange={(e) => setField("relasiHukum", e.target.value)}
-                placeholder="Contoh: Mencabut Peraturan Rektor No. 5 Tahun 2018"
-                rows={2}
-                className="mt-1 text-sm resize-none"
-                data-ocid="admin_dokumen.relasi_hukum_textarea"
-              />
-            </div>
-
-            {/* Abstrak */}
-            <div>
-              <Label htmlFor="dok-abstrak" className="text-sm font-medium">
-                Abstrak <span className="text-accent">*</span>
-              </Label>
-              <Textarea
-                id="dok-abstrak"
-                value={form.abstrak}
-                onChange={(e) => setField("abstrak", e.target.value)}
-                placeholder="Ringkasan isi dokumen..."
-                rows={3}
-                className="mt-1 text-sm resize-none"
-                data-ocid="admin_dokumen.abstrak_textarea"
-              />
-              {errors.abstrak && (
-                <p
-                  className="text-xs text-accent mt-1"
-                  data-ocid="admin_dokumen.abstrak.field_error"
-                >
-                  {errors.abstrak}
-                </p>
-              )}
-            </div>
-
-            {/* Tags */}
-            <div>
-              <Label htmlFor="dok-tags" className="text-sm font-medium">
-                Tag (pisahkan dengan koma)
-              </Label>
-              <Input
-                id="dok-tags"
-                value={form.tags}
-                onChange={(e) => setField("tags", e.target.value)}
-                placeholder="cth. statuta, akademik, 2024"
-                className="mt-1 text-sm"
-                data-ocid="admin_dokumen.tags_input"
-              />
-            </div>
-
-            {/* File Upload */}
-            <div>
-              <Label className="text-sm font-medium">
-                File PDF {!editId && <span className="text-accent">*</span>}
-                {editId && (
-                  <span className="text-muted-foreground font-normal">
-                    {" "}
-                    (kosongkan jika tidak mengubah)
-                  </span>
-                )}
-              </Label>
-              <button
-                type="button"
-                className="mt-1 w-full border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/40 transition-colors"
-                onClick={() => fileRef.current?.click()}
-                data-ocid="admin_dokumen.upload_button"
-              >
-                <Upload className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
-                {form.file ? (
-                  <p className="text-sm text-foreground font-medium">
-                    {form.file.name}
-                  </p>
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    Klik untuk pilih file PDF
-                  </p>
-                )}
-              </button>
-              <input
-                ref={fileRef}
-                type="file"
-                accept=".pdf,application/pdf"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0] ?? null;
-                  setField("file", f);
-                }}
-                data-ocid="admin_dokumen.file_input"
-              />
-              {errors.file && (
-                <p
-                  className="text-xs text-accent mt-1"
-                  data-ocid="admin_dokumen.file.field_error"
-                >
-                  {errors.file}
-                </p>
-              )}
-              {saving && uploadProgress > 0 && uploadProgress < 100 && (
-                <div className="mt-2">
-                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-primary rounded-full transition-all"
-                      style={{ width: `${uploadProgress}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Mengunggah... {uploadProgress}%
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Edit Mode: Pesan Perubahan & Peringatan Draft */}
-            {editId && (
-              <div className="space-y-4">
-                {/* Warning Banner */}
-                <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4">
-                  <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-semibold text-amber-800">Perhatian: Perubahan Memerlukan Verifikasi Ulang</p>
-                    <p className="text-xs text-amber-700 mt-1 leading-relaxed">
-                      Menyimpan perubahan pada dokumen ini akan mengubah statusnya kembali menjadi <strong>Draf</strong>.
-                      Dokumen perlu diajukan untuk review dan diverifikasi ulang oleh Verifikator / Super Admin sebelum dapat diterbitkan kembali.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Pesan Perubahan */}
-                <div>
-                  <Label htmlFor="dok-pesan-perubahan" className="text-sm font-medium flex items-center gap-2">
-                    <MessageSquare className="w-4 h-4 text-accent" />
-                    Pesan Perubahan
-                    <span className="text-muted-foreground font-normal text-xs">(opsional, namun sangat disarankan)</span>
-                  </Label>
-                  <Textarea
-                    id="dok-pesan-perubahan"
-                    value={form.pesanPerubahan}
-                    onChange={(e) => setField("pesanPerubahan", e.target.value)}
-                    placeholder="Jelaskan perubahan apa yang Anda lakukan pada dokumen ini, misal: 'Memperbaiki nomor dokumen yang salah di halaman 2' atau 'Memperbarui lampiran PDF ke versi terbaru'..."
-                    rows={3}
-                    className="mt-1 text-sm resize-none border-amber-300 focus:border-amber-500 focus:ring-amber-200"
-                    data-ocid="admin_dokumen.pesan_perubahan_textarea"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1.5">
-                    Pesan ini akan dicatat dalam riwayat dokumen dan dapat dilihat oleh Verifikator.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Audit Trail (read-only, only in edit mode) */}
-            {editId && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 border-b pb-2">
-                  <History className="w-4 h-4 text-accent" />
-                  <h3 className="text-sm font-bold uppercase tracking-wider">Riwayat Review & Aktivitas</h3>
-                </div>
-                <WorkflowHistory dokumenId={editId} />
-              </div>
-            )}
-          </div>
-
-            <div className="flex items-center justify-end gap-3 pt-6 mt-6 border-t border-border">
+            <div className="flex items-center gap-4 mb-6">
               <Button
                 variant="outline"
-                onClick={() => setShowForm(false)}
+                onClick={() => !saving && setShowForm(false)}
                 disabled={saving}
-                data-ocid="admin_dokumen.cancel_button"
               >
-                Batal
+                Kembali
               </Button>
-              <Button
-                onClick={handleSave}
-                disabled={saving}
-                className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
-                data-ocid="admin_dokumen.submit_button"
-              >
-                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                {saving ? "Menyimpan..." : "Simpan"}
-              </Button>
+              <h1 className="font-display font-bold text-2xl text-foreground">
+                {editId ? "Edit Dokumen" : "Tambah Dokumen"}
+              </h1>
+            </div>
+
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+              <div className="space-y-6">
+                {/* Catatan Koreksi (read-only, shown if not empty) */}
+                {editId && editCatatanKoreksi && (
+                  <div
+                    className="rounded-lg border border-yellow-300 bg-yellow-50 p-3"
+                    data-ocid="admin_dokumen.catatan_koreksi_panel"
+                  >
+                    <p className="text-xs font-semibold text-yellow-800 mb-1">
+                      Catatan Koreksi dari Super Admin
+                    </p>
+                    <p className="text-xs text-yellow-700 whitespace-pre-wrap">
+                      {editCatatanKoreksi}
+                    </p>
+                  </div>
+                )}
+
+                {/* Judul */}
+                <div>
+                  <Label htmlFor="dok-judul" className="text-sm font-medium">
+                    Judul <span className="text-accent">*</span>
+                  </Label>
+                  <Input
+                    id="dok-judul"
+                    value={form.judul}
+                    onChange={(e) => setField("judul", e.target.value)}
+                    placeholder="Masukkan judul dokumen"
+                    className="mt-1 text-sm"
+                    data-ocid="admin_dokumen.judul_input"
+                  />
+                  {errors.judul && (
+                    <p
+                      className="text-xs text-accent mt-1"
+                      data-ocid="admin_dokumen.judul.field_error"
+                    >
+                      {errors.judul}
+                    </p>
+                  )}
+                </div>
+
+                {/* Nomor */}
+                <div>
+                  <Label htmlFor="dok-nomor" className="text-sm font-medium">
+                    Nomor Dokumen <span className="text-accent">*</span>
+                  </Label>
+                  <Input
+                    id="dok-nomor"
+                    value={form.nomor}
+                    onChange={(e) => setField("nomor", e.target.value)}
+                    placeholder="cth. SK/001/UNTAG-BWI/2024"
+                    className="mt-1 text-sm"
+                    data-ocid="admin_dokumen.nomor_input"
+                  />
+                  {errors.nomor && (
+                    <p
+                      className="text-xs text-accent mt-1"
+                      data-ocid="admin_dokumen.nomor.field_error"
+                    >
+                      {errors.nomor}
+                    </p>
+                  )}
+                </div>
+
+                {/* Kategori & Tahun */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-sm font-medium">
+                      Kategori <span className="text-accent">*</span>
+                    </Label>
+                    <Select
+                      value={form.kategoriId}
+                      onValueChange={(v) => setField("kategoriId", v)}
+                    >
+                      <SelectTrigger
+                        className="mt-1 text-sm"
+                        data-ocid="admin_dokumen.kategori_select"
+                      >
+                        <SelectValue placeholder="Pilih kategori" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(kategoriList ?? []).map((k) => (
+                          <SelectItem key={k.id} value={String(k.id)}>
+                            {k.nama}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {errors.kategoriId && (
+                      <p
+                        className="text-xs text-accent mt-1"
+                        data-ocid="admin_dokumen.kategori.field_error"
+                      >
+                        {errors.kategoriId}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium">Tahun</Label>
+                    <Select
+                      value={form.tahun}
+                      onValueChange={(v) => setField("tahun", v)}
+                    >
+                      <SelectTrigger
+                        className="mt-1 text-sm"
+                        data-ocid="admin_dokumen.tahun_select"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TAHUN_OPTIONS.map((y) => (
+                          <SelectItem key={String(y)} value={String(y)}>
+                            {y}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Tanggal & Status */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label htmlFor="dok-tgl" className="text-sm font-medium">
+                      Tanggal Penetapan <span className="text-accent">*</span>
+                    </Label>
+                    <Input
+                      id="dok-tgl"
+                      type="date"
+                      value={form.tanggalPenetapan}
+                      onChange={(e) => setField("tanggalPenetapan", e.target.value)}
+                      className="mt-1 text-sm"
+                      data-ocid="admin_dokumen.tanggal_input"
+                    />
+                    {errors.tanggalPenetapan && (
+                      <p
+                        className="text-xs text-accent mt-1"
+                        data-ocid="admin_dokumen.tanggal.field_error"
+                      >
+                        {errors.tanggalPenetapan}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label className="text-sm font-medium">Status Keberlakuan Utama</Label>
+                    <Select
+                      value={form.status}
+                      onValueChange={(v) => setField("status", v as StatusDokumen)}
+                    >
+                      <SelectTrigger
+                        className="mt-1 text-sm font-semibold text-accent"
+                        data-ocid="admin_dokumen.status_select"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(statusList ?? []).map((st) => (
+                          <SelectItem key={st.id} value={st.nama}>{st.nama}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* Simlink / Dokumen Terkait Section */}
+                <div className="rounded-xl border border-border bg-muted/10 p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-bold flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-accent" />
+                      Simlink: Hubungkan dengan Dokumen Lain <span className="text-muted-foreground font-normal text-xs">(opsional)</span>
+                    </Label>
+                  </div>
+
+                  {form.relatedDocs.length > 0 && (
+                    <div className="space-y-2">
+                      {form.relatedDocs.map((rel, idx) => (
+                        <div key={idx} className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg shadow-sm animate-in fade-in zoom-in-95 duration-200">
+                          <Select
+                            value={rel.tipe_relasi}
+                            onValueChange={v => {
+                              const newRels = [...form.relatedDocs];
+                              newRels[idx].tipe_relasi = v;
+                              setField('relatedDocs', newRels);
+                            }}
+                          >
+                            <SelectTrigger className="w-32 h-8 text-xs font-bold uppercase">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Mencabut">Mencabut</SelectItem>
+                              <SelectItem value="Mengubah">Mengubah</SelectItem>
+                              <SelectItem value="Menjabarkan">Menjabarkan</SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-foreground truncate">{rel.judul}</p>
+                          </div>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-accent hover:bg-accent/5"
+                            onClick={() => {
+                              const newRels = form.relatedDocs.filter((_, i) => i !== idx);
+                              setField('relatedDocs', newRels);
+                            }}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <RelationSelector
+                    onAdd={(doc) => {
+                      if (form.relatedDocs.some(r => r.target_id === doc.id)) {
+                        toast.error("Dokumen sudah ada dalam daftar relasi");
+                        return;
+                      }
+                      const newRel = { target_id: doc.id, tipe_relasi: 'Mencabut', judul: doc.judul };
+                      setField('relatedDocs', [...form.relatedDocs, newRel]);
+                    }}
+                  />
+                  <p className="text-[10px] text-muted-foreground italic">
+                    * Simlink memungkinkan JDIH menghubungkan riwayat hukum secara otomatis antar peraturan.
+                  </p>
+                </div>
+
+                {/* Tanggal Pengundangan */}
+                <div>
+                  <Label
+                    htmlFor="dok-tgl-pengundangan"
+                    className="text-sm font-medium"
+                  >
+                    Tanggal Pengundangan{" "}
+                    <span className="text-muted-foreground font-normal">
+                      (opsional)
+                    </span>
+                  </Label>
+                  <Input
+                    id="dok-tgl-pengundangan"
+                    type="date"
+                    value={form.tanggalPengundangan}
+                    onChange={(e) =>
+                      setField("tanggalPengundangan", e.target.value)
+                    }
+                    className="mt-1 text-sm"
+                    data-ocid="admin_dokumen.tanggal_pengundangan_input"
+                  />
+                </div>
+
+                {/* Relasi Hukum */}
+                <div>
+                  <Label htmlFor="dok-relasi-hukum" className="text-sm font-medium">
+                    Relasi Dengan Produk Hukum Lain{" "}
+                    <span className="text-muted-foreground font-normal">
+                      (opsional)
+                    </span>
+                  </Label>
+                  <Textarea
+                    id="dok-relasi-hukum"
+                    value={form.relasiHukum}
+                    onChange={(e) => setField("relasiHukum", e.target.value)}
+                    placeholder="Contoh: Mencabut Peraturan Rektor No. 5 Tahun 2018"
+                    rows={2}
+                    className="mt-1 text-sm resize-none"
+                    data-ocid="admin_dokumen.relasi_hukum_textarea"
+                  />
+                </div>
+
+                {/* Abstrak */}
+                <div>
+                  <Label htmlFor="dok-abstrak" className="text-sm font-medium">
+                    Abstrak <span className="text-accent">*</span>
+                  </Label>
+                  <div className="mt-2 bg-background">
+                    <ReactQuill
+                      theme="snow"
+                      value={form.abstrak}
+                      onChange={(val) => setField("abstrak", val)}
+                      className="h-64 mb-12"
+                      placeholder="Tuliskan abstrak atau ringkasan dokumen..."
+                    />
+                  </div>
+                  {errors.abstrak && (
+                    <p
+                      className="text-xs text-accent mt-1"
+                      data-ocid="admin_dokumen.abstrak.field_error"
+                    >
+                      {errors.abstrak}
+                    </p>
+                  )}
+                </div>
+
+                {/* Tags */}
+                <div>
+                  <Label htmlFor="dok-tags" className="text-sm font-medium">
+                    Tag (pisahkan dengan koma)
+                  </Label>
+                  <Input
+                    id="dok-tags"
+                    value={form.tags}
+                    onChange={(e) => setField("tags", e.target.value)}
+                    placeholder="cth. statuta, akademik, 2024"
+                    className="mt-1 text-sm"
+                    data-ocid="admin_dokumen.tags_input"
+                  />
+                </div>
+
+                {/* File Upload */}
+                <div>
+                  <Label className="text-sm font-medium">
+                    File PDF {!editId && <span className="text-accent">*</span>}
+                    {editId && (
+                      <span className="text-muted-foreground font-normal">
+                        {" "}
+                        (kosongkan jika tidak mengubah)
+                      </span>
+                    )}
+                  </Label>
+                  <button
+                    type="button"
+                    className="mt-1 w-full border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary/40 transition-colors"
+                    onClick={() => fileRef.current?.click()}
+                    data-ocid="admin_dokumen.upload_button"
+                  >
+                    <Upload className="w-5 h-5 text-muted-foreground mx-auto mb-2" />
+                    {form.file ? (
+                      <p className="text-sm text-foreground font-medium">
+                        {form.file.name}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Klik untuk pilih file PDF
+                      </p>
+                    )}
+                  </button>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0] ?? null;
+                      setField("file", f);
+                    }}
+                    data-ocid="admin_dokumen.file_input"
+                  />
+                  {errors.file && (
+                    <p
+                      className="text-xs text-accent mt-1"
+                      data-ocid="admin_dokumen.file.field_error"
+                    >
+                      {errors.file}
+                    </p>
+                  )}
+                  {saving && uploadProgress > 0 && uploadProgress < 100 && (
+                    <div className="mt-2">
+                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full transition-all"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Mengunggah... {uploadProgress}%
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Edit Mode: Pesan Perubahan & Peringatan Draft */}
+                {editId && (
+                  <div className="space-y-4">
+                    {/* Warning Banner */}
+                    <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 p-4">
+                      <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-semibold text-amber-800">Perhatian: Perubahan Memerlukan Verifikasi Ulang</p>
+                        <p className="text-xs text-amber-700 mt-1 leading-relaxed">
+                          Menyimpan perubahan pada dokumen ini akan mengubah statusnya kembali menjadi <strong>Draf</strong>.
+                          Dokumen perlu diajukan untuk review dan diverifikasi ulang oleh Verifikator / Super Admin sebelum dapat diterbitkan kembali.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Pesan Perubahan */}
+                    <div>
+                      <Label htmlFor="dok-pesan-perubahan" className="text-sm font-medium flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-accent" />
+                        Pesan Perubahan
+                        <span className="text-muted-foreground font-normal text-xs">(opsional, namun sangat disarankan)</span>
+                      </Label>
+                      <Textarea
+                        id="dok-pesan-perubahan"
+                        value={form.pesanPerubahan}
+                        onChange={(e) => setField("pesanPerubahan", e.target.value)}
+                        placeholder="Jelaskan perubahan apa yang Anda lakukan pada dokumen ini, misal: 'Memperbaiki nomor dokumen yang salah di halaman 2' atau 'Memperbarui lampiran PDF ke versi terbaru'..."
+                        rows={3}
+                        className="mt-1 text-sm resize-none border-amber-300 focus:border-amber-500 focus:ring-amber-200"
+                        data-ocid="admin_dokumen.pesan_perubahan_textarea"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1.5">
+                        Pesan ini akan dicatat dalam riwayat dokumen dan dapat dilihat oleh Verifikator.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Audit Trail (read-only, only in edit mode) */}
+                {editId && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 border-b pb-2">
+                      <History className="w-4 h-4 text-accent" />
+                      <h3 className="text-sm font-bold uppercase tracking-wider">Riwayat Review & Aktivitas</h3>
+                    </div>
+                    <WorkflowHistory dokumenId={editId} />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-6 mt-6 border-t border-border">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowForm(false)}
+                  disabled={saving}
+                  data-ocid="admin_dokumen.cancel_button"
+                >
+                  Batal
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="bg-accent hover:bg-accent/90 text-accent-foreground gap-2"
+                  data-ocid="admin_dokumen.submit_button"
+                >
+                  {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {saving ? "Menyimpan..." : "Simpan"}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
 
       {/* Delete Confirmation */}
       <AlertDialog

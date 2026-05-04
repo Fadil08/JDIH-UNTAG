@@ -1,7 +1,9 @@
 const router = require('express').Router();
 const db = require('../db');
 const { authMiddleware, requireMenu } = require('../middleware/auth');
-const { uploadGambar, deleteFile } = require('../middleware/upload');
+const { uploadGambar } = require('../middleware/upload');
+const { uploadToR2, deleteFromR2, buildUrl } = require('../utils/r2Storage');
+
 
 // ── GET /api/settings (publik) ────────────────────────────────────────────────
 router.get('/', async (req, res) => {
@@ -12,9 +14,9 @@ router.get('/', async (req, res) => {
       return acc;
     }, {});
     
-    // Add full URL to logo_url if present
+    // Konversi logo_url ke URL lengkap
     if (settings.logo_url) {
-      settings.logo_url = `/uploads/gambar/${settings.logo_url}`;
+      settings.logo_url = buildUrl(settings.logo_url, 'gambar');
     }
     
     res.json(settings);
@@ -47,13 +49,23 @@ router.put('/', authMiddleware, requireMenu('settings:edit'), uploadGambar.singl
       // Ambil logo lama untuk dihapus
       const [oldLogo] = await conn.query("SELECT setting_value FROM settings WHERE setting_key = 'logo_url'");
       if (oldLogo.length > 0 && oldLogo[0].setting_value) {
-        deleteFile(`gambar/${oldLogo[0].setting_value}`);
+        const oldVal = oldLogo[0].setting_value;
+        // Hapus dari R2 jika format baru
+        if (oldVal.startsWith('pdf/') || oldVal.startsWith('gambar/')) {
+          await deleteFromR2(oldVal);
+        }
       }
-      
-      // Update dengan nama file baru
+      // Upload logo baru ke R2
+      const r2File = await uploadToR2(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        'gambar'
+      );
+      // Update dengan R2 key
       await conn.query(
         "INSERT INTO settings (setting_key, setting_value) VALUES ('logo_url', ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)",
-        [req.file.filename]
+        [r2File.key]
       );
     }
     
@@ -67,7 +79,6 @@ router.put('/', authMiddleware, requireMenu('settings:edit'), uploadGambar.singl
     res.json({ success: true, message: 'Pengaturan berhasil disimpan' });
   } catch (err) {
     await conn.rollback();
-    if (req.file) deleteFile(`gambar/${req.file.filename}`);
     console.error(err);
     res.status(500).json({ error: 'Gagal menyimpan pengaturan' });
   } finally {

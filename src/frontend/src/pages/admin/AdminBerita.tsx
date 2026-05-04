@@ -52,13 +52,15 @@ import { EmptyState } from "../../components/ui/EmptyState";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { SkeletonList } from "../../components/ui/LoadingSpinner";
 import { useBerita, useDeleteBerita } from "../../hooks/useBackend";
-
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function truncatePrincipal(principal: string): string {
+function truncatePrincipal(principal: string | number | null | undefined): string {
   if (!principal) return "-";
-  if (principal.length <= 12) return principal;
-  return `${principal.slice(0, 12)}...`;
+  const str = String(principal);
+  if (str.length <= 12) return str;
+  return `${str.slice(0, 12)}...`;
 }
 
 // ─── Form State ────────────────────────────────────────────────────────────────
@@ -401,7 +403,7 @@ export function AdminBerita() {
     }
   }
 
-  const isBusy = saving || isUploading;
+  const isSavingOrUploading = saving || isUploading;
 
   return (
     <>
@@ -586,7 +588,7 @@ export function AdminBerita() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => !isBusy && setShowForm(false)}
+                onClick={() => !isSavingOrUploading && setShowForm(false)}
                 className="rounded-full hover:bg-zinc-200"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -646,15 +648,15 @@ export function AdminBerita() {
                     <Label htmlFor="berita-konten" className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
                       Isi Konten <span className="text-accent">*</span>
                     </Label>
-                    <Textarea
-                      id="berita-konten"
-                      value={form.konten}
-                      onChange={(e) => setField("konten", e.target.value)}
-                      placeholder="Tulis narasi lengkap berita di sini..."
-                      rows={15}
-                      className="mt-2 text-sm font-serif leading-relaxed"
-                      data-ocid="admin_berita.konten_textarea"
-                    />
+                    <div className="mt-2 bg-background border rounded-md overflow-hidden">
+                      <ReactQuill
+                        theme="snow"
+                        value={form.konten}
+                        onChange={(val) => setField("konten", val)}
+                        className="h-80 mb-12"
+                        placeholder="Tulis narasi lengkap berita di sini..."
+                      />
+                    </div>
                     {errors.konten && (
                       <p className="text-xs text-accent mt-1">{errors.konten}</p>
                     )}
@@ -763,16 +765,16 @@ export function AdminBerita() {
                 <div className="flex flex-col gap-2 pt-4">
                   <Button
                     onClick={handleSave}
-                    disabled={isBusy}
+                    disabled={isSavingOrUploading}
                     className="w-full bg-accent hover:bg-accent/90 text-accent-foreground h-11 font-bold"
                   >
-                    {isBusy && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                    {isSavingOrUploading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                     {isUploading ? "Mengunggah..." : editId ? "Simpan Perubahan" : "Terbitkan Artikel"}
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => !isBusy && setShowForm(false)}
-                    disabled={isBusy}
+                    onClick={() => !isSavingOrUploading && setShowForm(false)}
+                    disabled={isSavingOrUploading}
                     className="w-full"
                   >
                     Batal

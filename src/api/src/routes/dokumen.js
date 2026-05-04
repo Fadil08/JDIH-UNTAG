@@ -2,9 +2,23 @@ const slugify = require('slugify');
 const router = require('express').Router();
 const db = require('../db');
 const { authMiddleware, requireMenu, requireSuperAdmin } = require('../middleware/auth');
-const { uploadPdf, deleteFile } = require('../middleware/upload');
+const { uploadPdf } = require('../middleware/upload');
+const { uploadToR2, deleteFromR2, buildUrl } = require('../utils/r2Storage');
 
 // ── Helper: generate unique slug ─────────────────────────────────────────────
+
+// ── Helper: parse date (ISO string atau YYYY-MM-DD) ke format MySQL ───────────
+function parseDate(val) {
+  if (!val) return null;
+  // Jika sudah format YYYY-MM-DD, return langsung
+  if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return val;
+  // Jika format ISO (2026-04-15T17:00:00.000Z), ambil bagian tanggalnya saja
+  const d = new Date(val);
+  if (!isNaN(d.getTime())) {
+    return d.toISOString().slice(0, 10);
+  }
+  return null;
+}
 async function generateUniqueSlug(conn, title, excludeId = null) {
   const base = slugify(title, { lower: true, strict: true });
   let slug = base;
@@ -112,7 +126,7 @@ function formatDokumen(row, tags, relations = []) {
     status: row.status,
     abstrak: row.abstrak,
     relasiHukum: row.relasi_hukum || null,
-    filePdf: row.file_pdf ? `/uploads/pdf/${row.file_pdf}` : null,
+    filePdf: buildUrl(row.file_pdf, 'pdf'),
     downloadCount: row.download_count,
     workflowStatus: row.workflow_status,
     catatanKoreksi: row.catatan_koreksi || '',
@@ -254,7 +268,17 @@ router.post('/', authMiddleware, requireMenu('dokumen:create'), uploadPdf.single
       return res.status(400).json({ error: 'Judul, nomor, kategori, dan tahun wajib diisi' });
     }
 
-    const filePdf = req.file ? req.file.filename : null;
+    // Upload PDF ke R2 jika ada file yang dikirim
+    let filePdf = null;
+    if (req.file) {
+      const r2File = await uploadToR2(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        'pdf'
+      );
+      filePdf = r2File.key; // Simpan R2 key ke DB
+    }
     
     // Parse tags (can be array or JSON string or comma-separated string)
     let tags = [];
@@ -278,13 +302,17 @@ router.post('/', authMiddleware, requireMenu('dokumen:create'), uploadPdf.single
         }
     }
 
+    const tglPenetapan = parseDate(tanggalPenetapan);
+    const tglPengundangan = parseDate(tanggalPengundangan);
+
     const slug = await generateUniqueSlug(conn, judul);
 
     const [result] = await conn.query(
       `INSERT INTO dokumen 
-        (judul, slug, nomor, kategori_id, tahun, tanggal_penetapan, tanggal_pengundangan, status, abstrak, relasi_hukum, file_pdf, workflow_status, submitted_by, submitted_at)
+        (judul, slug, nomor, kategori_id, tahun, tanggal_penetapan, tanggal_pengundangan,
+         status, abstrak, relasi_hukum, file_pdf, workflow_status, submitted_by, submitted_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Draft', ?, NOW())`,
-      [judul, slug, nomor, kategoriId, tahun, tanggalPenetapan || null, tanggalPengundangan || null,
+      [judul, slug, nomor, kategoriId, tahun, tglPenetapan, tglPengundangan,
        status || 'Berlaku', abstrak || '', relasiHukum || null, filePdf, req.user.id]
     );
 
@@ -306,7 +334,7 @@ router.post('/', authMiddleware, requireMenu('dokumen:create'), uploadPdf.single
     res.status(201).json(formatDokumen(rows[0], tags, relations));
   } catch (err) {
     await conn.rollback();
-    if (req.file) deleteFile(`pdf/${req.file.filename}`);
+    // Tidak perlu hapus dari Drive karena upload belum selesai (belum ada ID)
     console.error(err);
     res.status(500).json({ error: 'Gagal menyimpan dokumen' });
   } finally {
@@ -342,8 +370,18 @@ router.put('/:id', authMiddleware, requireMenu('dokumen:edit'), uploadPdf.single
 
     let filePdf = existing[0].file_pdf;
     if (req.file) {
-      if (filePdf) deleteFile(`pdf/${filePdf}`);
-      filePdf = req.file.filename;
+      // Hapus file lama dari R2 jika format baru
+      if (filePdf && (filePdf.startsWith('pdf/') || filePdf.startsWith('gambar/'))) {
+        await deleteFromR2(filePdf);
+      }
+      // Upload file baru ke R2
+      const r2File = await uploadToR2(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        'pdf'
+      );
+      filePdf = r2File.key;
     }
 
     // Parse tags
@@ -376,6 +414,9 @@ router.put('/:id', authMiddleware, requireMenu('dokumen:edit'), uploadPdf.single
 
     const prevWorkflowStatus = existing[0].workflow_status;
 
+    const tglPenetapan = parseDate(tanggalPenetapan);
+    const tglPengundangan = parseDate(tanggalPengundangan);
+
     // Saat dokumen diedit, status workflow direset ke Draft dan perlu diverifikasi ulang.
     // catatan_koreksi juga dikosongkan karena ini adalah revision baru dari staff.
     await conn.query(
@@ -385,7 +426,7 @@ router.put('/:id', authMiddleware, requireMenu('dokumen:edit'), uploadPdf.single
         workflow_status='Draft', catatan_koreksi='',
         submitted_by=?, submitted_at=NOW()
        WHERE id = ?`,
-      [judul, slug, nomor, kategoriId, tahun, tanggalPenetapan || null, tanggalPengundangan || null,
+      [judul, slug, nomor, kategoriId, tahun, tglPenetapan, tglPengundangan,
        status || 'Berlaku', abstrak || '', relasiHukum || null, filePdf,
        req.user.id, req.params.id]
     );
@@ -420,9 +461,13 @@ router.put('/:id', authMiddleware, requireMenu('dokumen:edit'), uploadPdf.single
     res.json(formatDokumen(rows[0], tags, relations));
   } catch (err) {
     await conn.rollback();
-    if (req.file) deleteFile(`pdf/${req.file.filename}`);
-    console.error(err);
-    res.status(500).json({ error: 'Gagal mengupdate dokumen' });
+    // Log detail untuk debugging
+    console.error('[PUT /api/dokumen/:id] Error detail:');
+    console.error('  Message:', err.message);
+    console.error('  Code:', err.code);
+    console.error('  Stack:', err.stack?.split('\n')[1]);
+    res.status(500).json({ error: 'Gagal mengupdate dokumen', detail: err.message });
+
   } finally {
     conn.release();
   }
@@ -449,7 +494,10 @@ router.delete('/:id', authMiddleware, requireMenu('dokumen:delete'), async (req,
       return res.status(403).json({ error: 'Anda hanya dapat menghapus dokumen yang Anda tambahkan sendiri' });
     }
 
-    if (rows[0].file_pdf) deleteFile(`pdf/${rows[0].file_pdf}`);
+    // Hapus dari R2 jika format baru
+    if (rows[0].file_pdf && (rows[0].file_pdf.startsWith('pdf/') || rows[0].file_pdf.startsWith('gambar/'))) {
+      await deleteFromR2(rows[0].file_pdf);
+    }
 
     await conn.query('DELETE FROM dokumen WHERE id = ?', [req.params.id]);
     await conn.query(

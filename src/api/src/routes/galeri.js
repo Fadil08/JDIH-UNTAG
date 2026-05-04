@@ -1,14 +1,16 @@
 const router = require('express').Router();
 const db = require('../db');
 const { authMiddleware, requireMenu } = require('../middleware/auth');
-const { uploadGambar, deleteFile } = require('../middleware/upload');
+const { uploadGambar } = require('../middleware/upload');
+const { uploadToR2, deleteFromR2, buildUrl } = require('../utils/r2Storage');
+
 
 function formatGaleri(row) {
   return {
     id: row.id,
     judul: row.judul,
     deskripsi: row.deskripsi,
-    gambar: row.gambar ? `/uploads/gambar/${row.gambar}` : null,
+    gambar: buildUrl(row.gambar, 'gambar'),
     album: row.album,
     createdBy: row.created_by,
     createdByNama: row.created_by_nama || null,
@@ -80,7 +82,17 @@ router.post('/', authMiddleware, requireMenu('galeri:create'), uploadGambar.sing
     const { judul, deskripsi, album } = req.body;
     if (!judul) return res.status(400).json({ error: 'Judul wajib diisi' });
 
-    const gambar = req.file ? req.file.filename : null;
+    // Upload gambar ke R2 jika ada
+    let gambar = null;
+    if (req.file) {
+      const r2File = await uploadToR2(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        'gambar'
+      );
+      gambar = r2File.key;
+    }
     const [result] = await conn.query(
       'INSERT INTO galeri (judul, deskripsi, gambar, album, created_by) VALUES (?, ?, ?, ?, ?)',
       [judul, deskripsi || '', gambar, album || '', req.user.id]
@@ -95,7 +107,6 @@ router.post('/', authMiddleware, requireMenu('galeri:create'), uploadGambar.sing
     res.status(201).json(formatGaleri(rows[0]));
   } catch (err) {
     await conn.rollback();
-    if (req.file) deleteFile(`gambar/${req.file.filename}`);
     console.error(err);
     res.status(500).json({ error: 'Gagal menyimpan item galeri' });
   } finally {
@@ -121,8 +132,16 @@ router.put('/:id', authMiddleware, requireMenu('galeri:create'), uploadGambar.si
     const { judul, deskripsi, album } = req.body;
     let gambar = existing[0].gambar;
     if (req.file) {
-      if (gambar) deleteFile(`gambar/${gambar}`);
-      gambar = req.file.filename;
+      if (gambar && (gambar.startsWith('pdf/') || gambar.startsWith('gambar/'))) {
+        await deleteFromR2(gambar);
+      }
+      const r2File = await uploadToR2(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        'gambar'
+      );
+      gambar = r2File.key;
     }
 
     await conn.query(
@@ -139,7 +158,6 @@ router.put('/:id', authMiddleware, requireMenu('galeri:create'), uploadGambar.si
     res.json(formatGaleri(rows[0]));
   } catch (err) {
     await conn.rollback();
-    if (req.file) deleteFile(`gambar/${req.file.filename}`);
     console.error(err);
     res.status(500).json({ error: 'Gagal mengupdate item galeri' });
   } finally {
@@ -162,8 +180,9 @@ router.delete('/:id', authMiddleware, requireMenu('galeri:delete'), async (req, 
       return res.status(403).json({ error: 'Akses ditolak: Anda tidak dapat menghapus galeri orang lain' });
     }
 
-    if (rows[0].gambar) deleteFile(`gambar/${rows[0].gambar}`);
-    await conn.query('DELETE FROM galeri WHERE id = ?', [req.params.id]);
+    if (rows[0].gambar && (rows[0].gambar.startsWith('pdf/') || rows[0].gambar.startsWith('gambar/'))) {
+      await deleteFromR2(rows[0].gambar);
+    }    await conn.query('DELETE FROM galeri WHERE id = ?', [req.params.id]);
     await conn.query(
       'INSERT INTO activity_log (action, target_type, target_id, target_title, performed_by) VALUES (?, ?, ?, ?, ?)',
       ['Menghapus item galeri', 'galeri', req.params.id, rows[0].judul, req.user.id]
