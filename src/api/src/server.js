@@ -18,7 +18,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 // ── Middleware global ────────────────────────────────────────────────────────
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: process.env.FRONTEND_URL || 'https://jdih-untag-frontend-984jd5ag4-fadil08s-projects.vercel.app/',
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -28,18 +28,18 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use('/uploads', express.static(uploadDir));
 
 // ── Routes ───────────────────────────────────────────────────────────────────
-app.use('/api/auth',      require('./routes/auth'));
-app.use('/api/kategori',  require('./routes/kategori'));
-app.use('/api/status',    require('./routes/status'));
-app.use('/api/dokumen',   require('./routes/dokumen'));
-app.use('/api/berita',    require('./routes/berita'));
-app.use('/api/galeri',    require('./routes/galeri'));
-app.use('/api/tentang',   require('./routes/tentang'));
-app.use('/api/users',     require('./routes/users'));
-app.use('/api/roles',     require('./routes/roles'));
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/kategori', require('./routes/kategori'));
+app.use('/api/status', require('./routes/status'));
+app.use('/api/dokumen', require('./routes/dokumen'));
+app.use('/api/berita', require('./routes/berita'));
+app.use('/api/galeri', require('./routes/galeri'));
+app.use('/api/tentang', require('./routes/tentang'));
+app.use('/api/users', require('./routes/users'));
+app.use('/api/roles', require('./routes/roles'));
 app.use('/api/statistik', require('./routes/statistik'));
-app.use('/api/settings',  require('./routes/settings'));
-app.use('/api/logs',      require('./routes/logs'));
+app.use('/api/settings', require('./routes/settings'));
+app.use('/api/logs', require('./routes/logs'));
 
 // ── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
