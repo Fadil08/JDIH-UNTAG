@@ -41,7 +41,7 @@ export function AdminSettings() {
         contact_phone: settings.contact_phone || "",
         logo: null,
       });
-      setPreviewLogo(settings.logo_url ? API_BASE + settings.logo_url : null);
+      setPreviewLogo(settings.logo_url ? (settings.logo_url.startsWith('http') ? settings.logo_url : API_BASE + settings.logo_url) : null);
     }
   }, [settings]);
 
