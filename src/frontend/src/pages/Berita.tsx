@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Calendar, Newspaper, User } from "lucide-react";
+import { ArrowRight, Newspaper } from "lucide-react";
 import { Layout } from "../components/layout/Layout";
 import { EmptyState } from "../components/ui/EmptyState";
 import { ErrorState } from "../components/ui/ErrorState";
@@ -7,28 +7,6 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { useBerita } from "../hooks/useBackend";
 import type { Artikel } from "../types";
 
-// ─── Date Formatter ───────────────────────────────────────────────────────────
-
-function formatTanggalIndonesia(dateStr: string | null | undefined): string {
-  if (!dateStr) return "-";
-  const BULAN = [
-    "Januari",
-    "Februari",
-    "Maret",
-    "April",
-    "Mei",
-    "Juni",
-    "Juli",
-    "Agustus",
-    "September",
-    "Oktober",
-    "November",
-    "Desember",
-  ];
-  const date = new Date(dateStr);
-  if (Number.isNaN(date.getTime())) return dateStr;
-  return `${date.getDate()} ${BULAN[date.getMonth()]} ${date.getFullYear()}`;
-}
 
 // ─── Skeleton Grid ────────────────────────────────────────────────────────────
 
@@ -37,25 +15,22 @@ const SKELETON_KEYS = ["a", "b", "c", "d"];
 function SkeletonBeritaGrid() {
   return (
     <div
-      className="grid grid-cols-1 md:grid-cols-2 gap-5"
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       data-ocid="berita.loading_state"
     >
       {SKELETON_KEYS.map((key) => (
         <div
           key={key}
-          className="bg-card border border-border rounded-lg overflow-hidden animate-pulse"
+          className="bg-white rounded-xl overflow-hidden animate-pulse shadow-sm"
         >
-          <div className="skeleton h-44 w-full" />
-          <div className="p-5 space-y-3">
-            <div className="flex gap-3">
-              <div className="skeleton h-3 w-28 rounded" />
-              <div className="skeleton h-3 w-20 rounded" />
-            </div>
-            <div className="skeleton h-5 w-4/5 rounded" />
-            <div className="skeleton h-4 w-full rounded" />
-            <div className="skeleton h-4 w-3/4 rounded" />
+          <div className="skeleton h-56 w-full" />
+          <div className="p-6 space-y-4">
+            <div className="skeleton h-7 w-full rounded" />
+            <div className="skeleton h-7 w-3/4 rounded" />
+            <div className="skeleton h-4 w-full rounded mt-4" />
             <div className="skeleton h-4 w-5/6 rounded" />
-            <div className="skeleton h-4 w-24 rounded mt-2" />
+            <div className="skeleton h-4 w-4/6 rounded" />
+            <div className="skeleton h-4 w-24 rounded mt-4" />
           </div>
         </div>
       ))}
@@ -66,20 +41,14 @@ function SkeletonBeritaGrid() {
 // ─── Artikel Card ─────────────────────────────────────────────────────────────
 
 function ArtikelCard({ artikel, index }: { artikel: Artikel; index: number }) {
-  const ringkasan =
-    artikel.ringkasan.length > 200
-      ? `${artikel.ringkasan.substring(0, 200)}…`
-      : artikel.ringkasan;
-
-  const tanggal = formatTanggalIndonesia(artikel.tanggalPublikasi ?? artikel.tanggal);
-
+  const ringkasan = artikel.ringkasan;
   const coverUrl = artikel.gambar ?? null;
 
   return (
     <Link
       to="/berita/$id"
       params={{ id: String(artikel.id) }}
-      className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-card transition-smooth group flex flex-col"
+      className="bg-white rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 group flex flex-col shadow-sm border border-transparent hover:border-primary/10"
       data-ocid={`berita.artikel_card.${index}`}
     >
       {/* Cover image / placeholder */}
@@ -87,43 +56,31 @@ function ArtikelCard({ artikel, index }: { artikel: Artikel; index: number }) {
         <img
           src={coverUrl}
           alt={artikel.judul}
-          className="h-44 w-full object-cover border-b border-border"
+          className="h-56 w-full object-cover"
           onError={(e) => {
             (e.currentTarget as HTMLImageElement).style.display = "none";
           }}
         />
       ) : (
-        <div className="h-44 bg-secondary flex items-center justify-center border-b border-border">
-          <Newspaper className="w-12 h-12 text-primary/20" />
+        <div className="h-56 bg-secondary flex items-center justify-center">
+          <Newspaper className="w-16 h-16 text-primary/20" />
         </div>
       )}
 
-      <div className="p-5 flex flex-col flex-1">
-        {/* Meta */}
-        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mb-3">
-          <span className="flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-            {tanggal}
-          </span>
-          <span className="flex items-center gap-1.5 min-w-0">
-            <User className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="truncate">{artikel.author ?? ''}</span>
-          </span>
-        </div>
-
+      <div className="p-6 flex flex-col flex-1">
         {/* Judul */}
-        <h2 className="font-display font-semibold text-foreground text-base leading-snug mb-2 group-hover:text-accent transition-smooth line-clamp-2">
+        <h2 className="font-display font-bold text-primary text-lg md:text-xl leading-snug mb-3 group-hover:text-accent transition-smooth line-clamp-3">
           {artikel.judul}
         </h2>
 
         {/* Ringkasan */}
-        <p className="text-muted-foreground text-sm leading-relaxed flex-1">
+        <p className="text-muted-foreground text-sm leading-relaxed flex-1 line-clamp-3">
           {ringkasan}
         </p>
 
         {/* CTA */}
-        <div className="flex items-center gap-1 text-accent text-sm font-semibold mt-4 group-hover:gap-2 transition-smooth">
-          Baca Selengkapnya <ArrowRight className="w-4 h-4" />
+        <div className="flex items-center gap-1 text-primary text-sm font-semibold mt-6 group-hover:gap-2 transition-smooth">
+          Selengkapnya <ArrowRight className="w-4 h-4" />
         </div>
       </div>
     </Link>
@@ -154,7 +111,7 @@ export function Berita() {
             description="Belum ada artikel berita yang dipublikasikan. Silakan kembali lagi nanti."
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {artikelList.map((artikel, idx) => (
               <ArtikelCard key={artikel.id} artikel={artikel} index={idx + 1} />
             ))}
