@@ -26,19 +26,31 @@ function formatTanggalIndonesia(dateStr: string | null | undefined): string {
 // ─── Content Renderer ─────────────────────────────────────────────────────────
 
 function ArticleContent({ isi }: { isi: string }) {
+  const hasHtmlTags = /<[a-z][\s\S]*>/i.test(isi);
+
+  if (hasHtmlTags) {
+    return (
+      <div
+        className="prose prose-sm md:prose-base max-w-none text-foreground/90 leading-relaxed text-justify prose-p:my-3 prose-headings:font-display prose-a:text-primary prose-img:rounded-lg"
+        data-ocid="berita_detail.konten"
+        dangerouslySetInnerHTML={{ __html: isi }}
+      />
+    );
+  }
+
   const paragraphs = isi.split(/\n\n+/).filter((p) => p.trim().length > 0);
 
   if (paragraphs.length <= 1) {
     const lines = isi.split("\n");
     return (
       <div
-        className="space-y-3 text-foreground leading-relaxed"
+        className="space-y-3 text-foreground/90 leading-relaxed text-[15px] md:text-base text-justify"
         data-ocid="berita_detail.konten"
       >
         {lines.map((line, i) =>
           line.trim() ? (
             // biome-ignore lint/suspicious/noArrayIndexKey: static content
-            <p key={i} className="text-base leading-7">
+            <p key={i}>
               {line}
             </p>
           ) : (
