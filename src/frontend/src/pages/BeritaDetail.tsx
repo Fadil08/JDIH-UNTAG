@@ -9,20 +9,7 @@ import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { PageHeader } from "../components/ui/PageHeader";
 import { useBerita, useBeritaDetail } from "../hooks/useBackend";
 import { useSEO } from "../hooks/useSEO";
-
-// ─── Date Formatter ───────────────────────────────────────────────────────────
-
-function formatTanggalIndonesia(dateStr: string | null | undefined): string {
-  if (!dateStr) return "-";
-  const BULAN = [
-    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
-  ];
-  const date = new Date(dateStr);
-  if (Number.isNaN(date.getTime())) return dateStr;
-  return `${date.getDate()} ${BULAN[date.getMonth()]} ${date.getFullYear()}`;
-}
-
+import { formatTanggalIndonesia } from "../lib/utils";
 // ─── Content Renderer ─────────────────────────────────────────────────────────
 
 function ArticleContent({ isi }: { isi: string }) {

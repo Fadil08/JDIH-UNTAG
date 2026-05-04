@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Layout } from "../components/layout/Layout";
+import { formatTanggalIndonesia } from "../lib/utils";
 import { KategoriTag } from "../components/ui/KategoriTag";
 import { SkeletonCard } from "../components/ui/LoadingSpinner";
 import { StatusBadge } from "../components/ui/StatusBadge";
@@ -542,7 +543,7 @@ export function Beranda() {
                     <div className="flex items-center gap-2 mb-3">
                       <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
                       <p className="text-xs text-muted-foreground font-medium">
-                        {artikel.tanggalPublikasi}
+                        {formatTanggalIndonesia(artikel.tanggalPublikasi ?? artikel.tanggal)}
                       </p>
                     </div>
 

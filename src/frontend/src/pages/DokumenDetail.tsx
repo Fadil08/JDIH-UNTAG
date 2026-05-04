@@ -22,6 +22,7 @@ import { StatusBadge } from "../components/ui/StatusBadge";
 import { useDokumenDetail } from "../hooks/useBackend";
 import { useSEO } from "../hooks/useSEO";
 import { STATUS_LABEL } from "../types";
+import { formatTanggalIndonesia } from "../lib/utils";
 
 // ─── Download Handler ─────────────────────────────────────────────────────────
 
@@ -209,13 +210,13 @@ export function DokumenDetail() {
                 />
                 <MetaRow
                   label="Tanggal Penetapan"
-                  value={dokumen.tanggalPenetapan ? new Date(dokumen.tanggalPenetapan).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) : '-'}
+                  value={dokumen.tanggalPenetapan ? formatTanggalIndonesia(dokumen.tanggalPenetapan) : '-'}
                   icon={<Calendar className="w-3.5 h-3.5" />}
                 />
                 {dokumen.tanggalPengundangan && (
                   <MetaRow
                     label="Tanggal Pengundangan"
-                    value={new Date(dokumen.tanggalPengundangan).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    value={formatTanggalIndonesia(dokumen.tanggalPengundangan)}
                     icon={<Calendar className="w-3.5 h-3.5" />}
                   />
                 )}
