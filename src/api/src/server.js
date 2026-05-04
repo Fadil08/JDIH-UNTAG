@@ -18,7 +18,14 @@ if (process.env.NODE_ENV !== 'production') {
 
 // ── Middleware global ────────────────────────────────────────────────────────
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://jdih-untag-frontend-984jd5ag4-fadil08s-projects.vercel.app/',
+  origin: function (origin, callback) {
+    // Izinkan requests tanpa origin (misal mobile apps atau curl), localhost, dan semua subdomain vercel.app
+    if (!origin || origin.includes('localhost') || origin.endsWith('.vercel.app') || origin === process.env.FRONTEND_URL) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
