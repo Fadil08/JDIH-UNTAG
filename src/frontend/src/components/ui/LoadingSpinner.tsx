@@ -1,4 +1,6 @@
-import { Loader2 } from "lucide-react";
+import { Loader2, Scale } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import api, { API_BASE } from "../../api";
 
 interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg";
@@ -6,10 +8,16 @@ interface LoadingSpinnerProps {
   className?: string;
 }
 
-const SIZE_MAP = {
-  sm: "w-4 h-4",
-  md: "w-6 h-6",
-  lg: "w-8 h-8",
+const SPINNER_SIZE_MAP = {
+  sm: "w-10 h-10",
+  md: "w-14 h-14",
+  lg: "w-20 h-20",
+};
+
+const LOGO_SIZE_MAP = {
+  sm: "w-5 h-5",
+  md: "w-7 h-7",
+  lg: "w-10 h-10",
 };
 
 export function LoadingSpinner({
@@ -17,13 +25,35 @@ export function LoadingSpinner({
   text,
   className = "",
 }: LoadingSpinnerProps) {
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => api.settings.get(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const logoUrl = settings?.logo_url 
+    ? (settings.logo_url.startsWith('http') ? settings.logo_url : API_BASE + settings.logo_url)
+    : null;
+
   return (
     <div
-      className={`flex flex-col items-center justify-center gap-3 ${className}`}
+      className={`flex flex-col items-center justify-center gap-4 ${className}`}
       data-ocid="loading_state"
     >
-      <Loader2 className={`${SIZE_MAP[size]} animate-spin text-primary`} />
-      {text && <p className="text-sm text-muted-foreground">{text}</p>}
+      <div className={`relative flex items-center justify-center ${SPINNER_SIZE_MAP[size]}`}>
+        {/* Outer spinning ring */}
+        <div className="absolute inset-0 border-[3px] border-primary/20 border-t-primary rounded-full animate-spin" />
+        
+        {/* Inner logo pulsing */}
+        <div className={`flex items-center justify-center animate-pulse bg-white rounded-full ${LOGO_SIZE_MAP[size]}`}>
+          {logoUrl ? (
+            <img src={logoUrl} alt="Logo" className="w-full h-full object-contain p-0.5" />
+          ) : (
+            <Scale className="w-full h-full text-accent p-1" />
+          )}
+        </div>
+      </div>
+      {text && <p className="text-sm font-medium text-muted-foreground animate-pulse">{text}</p>}
     </div>
   );
 }
