@@ -170,7 +170,7 @@ router.get('/', async (req, res) => {
     res.json(result);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Gagal mengambil data dokumen' });
+    res.status(500).json({ error: 'Gagal mengambil data dokumen', detail: err.message });
   }
 });
 
