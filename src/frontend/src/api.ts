@@ -1,7 +1,7 @@
 // REST API client untuk JDIH UNTAG
 // Menggantikan seluruh IC SDK / Motoko actor layer
 
-export const API_BASE = import.meta.env.VITE_API_URL ?? 'http://103.92.209.105:3001';
+export const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
 // ── Token helpers ─────────────────────────────────────────────────────────────
 
@@ -356,7 +356,7 @@ function buildFormData(data: Record<string, unknown>, fileField?: string, file?:
   const fd = new FormData();
   for (const [k, v] of Object.entries(data)) {
     if (v === undefined || v === null) continue;
-    
+
     if (v instanceof File || v instanceof Blob) {
       fd.append(k, v);
     } else if (Array.isArray(v) || (typeof v === 'object' && v !== null)) {
