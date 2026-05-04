@@ -1,7 +1,7 @@
 // REST API client untuk JDIH UNTAG
 // Menggantikan seluruh IC SDK / Motoko actor layer
 
-export const API_BASE = import.meta.env.VITE_API_URL ?? 'https://jdih-untag-pibvjv3au-fadil08s-projects.vercel.app';
+export const API_BASE = import.meta.env.VITE_API_URL ?? 'jdih-untag-api.vercel.app';
 
 // ── Token helpers ─────────────────────────────────────────────────────────────
 
