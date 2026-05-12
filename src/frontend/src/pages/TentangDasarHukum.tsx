@@ -4,14 +4,6 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { Skeleton } from "../components/ui/skeleton";
 import { useTentangPage } from "../hooks/useBackend";
 
-const DEFAULT_DASAR_HUKUM = [
-  "Peraturan Presiden Nomor 33 Tahun 2012 tentang Jaringan Dokumentasi dan Informasi Hukum Nasional",
-  "Peraturan Menteri Hukum dan HAM Nomor 8 Tahun 2019 tentang Standar Pengelolaan Dokumen dan Informasi Hukum",
-  "Undang-Undang Nomor 12 Tahun 2011 tentang Pembentukan Peraturan Perundang-undangan",
-  "Statuta Universitas 17 Agustus 1945 Banyuwangi",
-  "Keputusan Rektor UNTAG Banyuwangi tentang Pembentukan JDIH Kampus",
-];
-
 export function TentangDasarHukum() {
   const { data: page, isLoading } = useTentangPage("dasarHukum");
 
@@ -20,7 +12,7 @@ export function TentangDasarHukum() {
       page?.konten?.blocks?.find((b) => b.__kind__ === "daftarItem") as
         | { __kind__: "daftarItem"; daftarItem: string[] }
         | undefined
-    )?.daftarItem ?? DEFAULT_DASAR_HUKUM;
+    )?.daftarItem ?? [];
 
   return (
     <Layout>

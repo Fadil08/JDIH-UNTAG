@@ -12,115 +12,24 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { useTentangPages, useUpdateTentangPage } from "../../hooks/useBackend";
+import {
+  useTentangPage,
+  useTentangPages,
+  useUpdateTentangPage,
+} from "../../hooks/useBackend";
 import type { TentangBlock, TentangPage } from "../../types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type TabSlug = "sejarah" | "visiMisi" | "dasarHukum" | "fungsi" | "struktur";
+type TabSlug = string;
 
 interface TabConfig {
   slug: TabSlug;
   label: string;
 }
 
-const TABS: TabConfig[] = [
-  { slug: "sejarah", label: "Sejarah" },
-  { slug: "visiMisi", label: "Visi & Misi" },
-  { slug: "dasarHukum", label: "Dasar Hukum" },
-  { slug: "fungsi", label: "Fungsi JDIH" },
-  { slug: "struktur", label: "Struktur Organisasi" },
-];
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-// ─── Default content fallbacks ────────────────────────────────────────────────
-
-const DEFAULT_CONTENT: Record<TabSlug, TentangBlock[]> = {
-  sejarah: [
-    {
-      __kind__: "paragraf",
-      paragraf:
-        "JDIH (Jaringan Dokumentasi dan Informasi Hukum) Kampus Universitas 17 Agustus 1945 Banyuwangi dibentuk sebagai bagian dari upaya universitas dalam mendukung sistem dokumentasi hukum nasional yang diatur melalui Peraturan Presiden Nomor 33 Tahun 2012 tentang Jaringan Dokumentasi dan Informasi Hukum Nasional.",
-    },
-    {
-      __kind__: "paragraf",
-      paragraf:
-        "Pembentukan JDIH UNTAG Banyuwangi juga dilandasi oleh Peraturan Menteri Hukum dan HAM Nomor 8 Tahun 2019 tentang Standar Pengelolaan Dokumen dan Informasi Hukum.",
-    },
-    {
-      __kind__: "paragraf",
-      paragraf:
-        "Portal ini hadir sebagai wujud komitmen UNTAG Banyuwangi terhadap transparansi tata kelola hukum dan kemudahan akses informasi regulasi bagi seluruh civitas akademika.",
-    },
-    {
-      __kind__: "paragraf",
-      paragraf:
-        "Sejak didirikan, JDIH UNTAG Banyuwangi berkomitmen untuk terus memperbarui dan memperluas koleksi dokumen hukum agar seluruh civitas akademika dapat mengakses regulasi kampus secara mudah, cepat, dan gratis.",
-    },
-  ],
-  visiMisi: [
-    {
-      __kind__: "paragraf",
-      paragraf:
-        "Menjadi pusat dokumentasi dan informasi hukum kampus yang terpercaya, mudah diakses, dan bermanfaat bagi civitas akademika Universitas 17 Agustus 1945 Banyuwangi.",
-    },
-    {
-      __kind__: "daftarItem",
-      daftarItem: [
-        "Membangun sistem dokumentasi hukum kampus yang terstruktur, lengkap, dan mudah diakses",
-        "Melakukan pengelolaan dan pemutakhiran data produk hukum secara berkala dan konsisten",
-        "Menyebarluaskan informasi hukum kepada seluruh civitas akademika UNTAG Banyuwangi",
-        "Mendukung penegakan hukum dan tata kelola universitas yang transparan dan akuntabel",
-        "Menjalin koordinasi dan sinkronisasi dengan JDIHN pusat dan jaringan JDIH perguruan tinggi",
-      ],
-    },
-  ],
-  dasarHukum: [
-    {
-      __kind__: "daftarItem",
-      daftarItem: [
-        "Peraturan Presiden Nomor 33 Tahun 2012 tentang Jaringan Dokumentasi dan Informasi Hukum Nasional",
-        "Peraturan Menteri Hukum dan HAM Nomor 8 Tahun 2019 tentang Standar Pengelolaan Dokumen dan Informasi Hukum",
-        "Undang-Undang Nomor 12 Tahun 2011 tentang Pembentukan Peraturan Perundang-undangan",
-        "Statuta Universitas 17 Agustus 1945 Banyuwangi",
-        "Keputusan Rektor UNTAG Banyuwangi tentang Pembentukan JDIH Kampus",
-      ],
-    },
-  ],
-  fungsi: [
-    {
-      __kind__: "daftarItem",
-      daftarItem: [
-        "Mendokumentasikan seluruh produk hukum yang diterbitkan oleh Universitas 17 Agustus 1945 Banyuwangi",
-        "Menyediakan layanan informasi hukum yang mudah diakses oleh civitas akademika dan masyarakat umum",
-        "Menjaga ketertiban, kelengkapan, dan kemutakhiran data produk hukum kampus",
-        "Mendukung integrasi dan sinkronisasi data dengan Jaringan Dokumentasi dan Informasi Hukum Nasional (JDIHN)",
-        "Meningkatkan transparansi dan akuntabilitas tata kelola hukum universitas",
-        "Menyediakan sarana publikasi dan sosialisasi regulasi internal kampus",
-      ],
-    },
-  ],
-  struktur: [
-    {
-      __kind__: "daftarItem",
-      daftarItem: [
-        "Jabatan: Penanggung Jawab | Nama: Prof. Dr. H. Teguh Sulistyo, S.H., M.H. | Unit: Rektor UNTAG Banyuwangi",
-        "Jabatan: Ketua JDIH | Nama: Dr. Hj. Sri Wahyuni, S.H., M.H. | Unit: Wakil Rektor Bidang Akademik",
-        "Jabatan: Koordinator Teknis | Nama: Agus Prasetyo, S.H., M.H. | Unit: Kepala Biro Hukum & Kerjasama",
-        "Jabatan: Pengelola Dokumen | Nama: Dewi Rahmawati, S.H. | Unit: Staf Biro Hukum",
-        "Jabatan: Anggota | Nama: Rian Hidayat, S.Kom. | Unit: UPT Teknologi Informasi",
-        "Jabatan: Anggota | Nama: Siti Nurhayati, A.Md. | Unit: Staf Biro Akademik",
-      ],
-    },
-  ],
-};
-
-const DEFAULT_TITLES: Record<TabSlug, string> = {
-  sejarah: "Sejarah & Latar Belakang",
-  visiMisi: "Visi & Misi",
-  dasarHukum: "Dasar Hukum",
-  fungsi: "Fungsi JDIH",
-  struktur: "Struktur Organisasi",
-};
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
@@ -165,23 +74,46 @@ function SejarahEditor({ blocks, onChange }: SejarahEditorProps) {
     <div className="space-y-4">
       {paragraphs.map((p, idx) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: ordered paragraphs
-        <div key={idx}>
+        <div key={idx} className="group relative">
           <label
             htmlFor={`sejarah-paragraf-${idx}`}
             className="block text-xs font-semibold text-foreground mb-1"
           >
             Paragraf {idx + 1}
           </label>
-          <textarea
-            id={`sejarah-paragraf-${idx}`}
-            className="w-full border border-input rounded-lg px-3 py-2 text-sm text-foreground bg-background resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
-            rows={4}
-            value={p}
-            onChange={(e) => setParagraph(idx, e.target.value)}
-            data-ocid={`admin_tentang.sejarah.paragraf.${idx + 1}`}
-          />
+          <div className="flex gap-2">
+            <textarea
+              id={`sejarah-paragraf-${idx}`}
+              className="flex-1 border border-input rounded-lg px-3 py-2 text-sm text-foreground bg-background resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
+              rows={4}
+              value={p}
+              onChange={(e) => setParagraph(idx, e.target.value)}
+              data-ocid={`admin_tentang.sejarah.paragraf.${idx + 1}`}
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const updated = [...paragraphs];
+                updated.splice(idx, 1);
+                onChange(updated.map(txt => ({ __kind__: "paragraf", paragraf: txt })));
+              }}
+              className="text-muted-foreground hover:text-red-600 transition-colors self-start mt-2"
+              aria-label="Hapus paragraf"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         </div>
       ))}
+      <button
+        type="button"
+        onClick={() => {
+          onChange([...blocks, { __kind__: "paragraf", paragraf: "" }]);
+        }}
+        className="flex items-center gap-1.5 text-xs text-red-600 hover:text-red-700 font-medium py-1"
+      >
+        <Plus size={14} /> Tambah Paragraf
+      </button>
     </div>
   );
 }
@@ -519,25 +451,31 @@ function StrukturEditor({ blocks, onChange }: StrukturEditorProps) {
 
 interface TabPanelProps {
   slug: TabSlug;
-  page?: TentangPage | null;
 }
 
-function TabPanel({ slug, page }: TabPanelProps) {
-  const defaultBlocks = DEFAULT_CONTENT[slug];
-  const [judul, setJudul] = useState(page?.judul ?? DEFAULT_TITLES[slug]);
-  const [blocks, setBlocks] = useState<TentangBlock[]>(
-    page?.konten?.blocks?.length ? page.konten.blocks : defaultBlocks,
-  );
+function TabPanel({ slug }: TabPanelProps) {
+  const { data: page, isLoading } = useTentangPage(slug);
+  const [judul, setJudul] = useState("");
+  const [blocks, setBlocks] = useState<TentangBlock[]>([]);
 
   // Sync when backend data loads
   useEffect(() => {
     if (page) {
       setJudul(page.judul);
-      if (page.konten?.blocks?.length) setBlocks(page.konten.blocks);
+      setBlocks(page.konten?.blocks ?? []);
     }
   }, [page]);
 
   const mutation = useUpdateTentangPage();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center">
+        <Loader2 size={18} className="animate-spin text-red-600" />
+        Memuat konten halaman...
+      </div>
+    );
+  }
 
 
   const handleSave = () => {
@@ -655,8 +593,14 @@ function TabPanel({ slug, page }: TabPanelProps) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export function AdminTentang() {
-  const [activeTab, setActiveTab] = useState<TabSlug>("sejarah");
   const { data: pages, isLoading } = useTentangPages();
+  const [activeTab, setActiveTab] = useState<TabSlug>("sejarah");
+
+  useEffect(() => {
+    if (pages && pages.length > 0 && activeTab === "sejarah" && !pages.find(p => p.slug === "sejarah")) {
+      setActiveTab(pages[0].slug);
+    }
+  }, [pages]);
 
   const getPage = (slug: TabSlug): TentangPage | null => {
     if (!pages) return null;
@@ -696,42 +640,31 @@ export function AdminTentang() {
           className="flex overflow-x-auto border-b border-border bg-muted/30"
           role="tablist"
         >
-          {TABS.map((tab) => (
+          {pages?.map((p) => (
             <button
-              key={tab.slug}
+              key={p.slug}
               type="button"
               role="tab"
-              aria-selected={activeTab === tab.slug}
-              onClick={() => setActiveTab(tab.slug)}
+              aria-selected={activeTab === p.slug}
+              onClick={() => setActiveTab(p.slug)}
               className={`flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.slug
+                activeTab === p.slug
                   ? "border-red-600 text-red-700 bg-background"
                   : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50"
               }`}
-              data-ocid={`admin_tentang.tab.${tab.slug}`}
+              data-ocid={`admin_tentang.tab.${p.slug}`}
             >
-              {tab.label}
+              {p.judul.replace(" JDIH UNTAG Banyuwangi", "").replace(" JDIH", "")}
             </button>
           ))}
         </div>
 
         {/* Tab content */}
         <div className="p-6">
-          {isLoading ? (
-            <div
-              className="flex items-center gap-2 text-sm text-muted-foreground py-8 justify-center"
-              data-ocid="admin_tentang.loading_state"
-            >
-              <Loader2 size={18} className="animate-spin text-red-600" />
-              Memuat konten...
-            </div>
-          ) : (
-            <TabPanel
-              key={activeTab}
-              slug={activeTab}
-              page={getPage(activeTab)}
-            />
-          )}
+          <TabPanel
+            key={activeTab}
+            slug={activeTab}
+          />
         </div>
       </div>
 

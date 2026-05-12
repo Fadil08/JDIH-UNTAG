@@ -4,21 +4,13 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { Skeleton } from "../components/ui/skeleton";
 import { useTentangPage } from "../hooks/useBackend";
 
-const DEFAULT_PARAGRAPHS = [
-  "JDIH (Jaringan Dokumentasi dan Informasi Hukum) Kampus Universitas 17 Agustus 1945 Banyuwangi dibentuk sebagai bagian dari upaya universitas dalam mendukung sistem dokumentasi hukum nasional yang diatur melalui Peraturan Presiden Nomor 33 Tahun 2012 tentang Jaringan Dokumentasi dan Informasi Hukum Nasional.",
-  "Pembentukan JDIH UNTAG Banyuwangi juga dilandasi oleh Peraturan Menteri Hukum dan HAM Nomor 8 Tahun 2019 tentang Standar Pengelolaan Dokumen dan Informasi Hukum, yang mewajibkan setiap institusi, termasuk perguruan tinggi, untuk mengelola produk hukum secara tertib, terstruktur, dan mudah diakses.",
-  "Portal ini hadir sebagai wujud komitmen UNTAG Banyuwangi terhadap transparansi tata kelola hukum dan kemudahan akses informasi regulasi bagi seluruh civitas akademika, serta sebagai bentuk integrasi dengan Jaringan Dokumentasi dan Informasi Hukum Nasional (JDIHN) yang dikoordinasikan oleh Kementerian Hukum dan HAM Republik Indonesia.",
-  "Sejak didirikan, JDIH UNTAG Banyuwangi berkomitmen untuk terus memperbarui dan memperluas koleksi dokumen hukum agar seluruh civitas akademika, tenaga pendidik, tenaga kependidikan, dan masyarakat umum dapat mengakses regulasi kampus secara mudah, cepat, dan gratis.",
-];
-
 export function TentangSejarah() {
   const { data: page, isLoading } = useTentangPage("sejarah");
 
   const paragraphs: string[] =
     page?.konten?.blocks
       ?.filter((b) => b.__kind__ === "paragraf")
-      .map((b) => (b as { __kind__: "paragraf"; paragraf: string }).paragraf) ??
-    DEFAULT_PARAGRAPHS;
+      .map((b) => (b as { __kind__: "paragraf"; paragraf: string }).paragraf) ?? [];
 
   return (
     <Layout>

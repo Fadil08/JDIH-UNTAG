@@ -4,15 +4,6 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { Skeleton } from "../components/ui/skeleton";
 import { useTentangPage } from "../hooks/useBackend";
 
-const DEFAULT_FUNGSI = [
-  "Mendokumentasikan seluruh produk hukum yang diterbitkan oleh Universitas 17 Agustus 1945 Banyuwangi",
-  "Menyediakan layanan informasi hukum yang mudah diakses oleh civitas akademika dan masyarakat umum",
-  "Menjaga ketertiban, kelengkapan, dan kemutakhiran data produk hukum kampus",
-  "Mendukung integrasi dan sinkronisasi data dengan Jaringan Dokumentasi dan Informasi Hukum Nasional (JDIHN)",
-  "Meningkatkan transparansi dan akuntabilitas tata kelola hukum universitas",
-  "Menyediakan sarana publikasi dan sosialisasi regulasi internal kampus",
-];
-
 export function TentangFungsi() {
   const { data: page, isLoading } = useTentangPage("fungsi");
 
@@ -21,7 +12,7 @@ export function TentangFungsi() {
       page?.konten?.blocks?.find((b) => b.__kind__ === "daftarItem") as
         | { __kind__: "daftarItem"; daftarItem: string[] }
         | undefined
-    )?.daftarItem ?? DEFAULT_FUNGSI;
+    )?.daftarItem ?? [];
 
   return (
     <Layout>

@@ -139,15 +139,28 @@ CREATE TABLE IF NOT EXISTS galeri (
   FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ── Tabel: tentang_pages ──────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS tentang_pages (
   id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  slug        ENUM('sejarah', 'visiMisi', 'dasarHukum', 'fungsi', 'struktur') NOT NULL UNIQUE,
+  slug        VARCHAR(100) NOT NULL UNIQUE,
   judul       VARCHAR(500) NOT NULL,
-  konten      JSON         NOT NULL COMMENT 'Object { blocks: TentangBlock[] }',
   updated_by  INT UNSIGNED NULL,
   updated_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (updated_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ── Tabel: tentang_konten ─────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS tentang_konten (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  page_id       INT UNSIGNED NOT NULL,
+  tipe          ENUM('paragraf', 'list_item', 'struktur_item') NOT NULL,
+  isi           TEXT NOT NULL,
+  nama          VARCHAR(255) NULL,
+  jabatan       VARCHAR(255) NULL,
+  unit          VARCHAR(255) NULL,
+  urutan        INT NOT NULL DEFAULT 0,
+  FOREIGN KEY (page_id) REFERENCES tentang_pages(id) ON DELETE CASCADE,
+  INDEX idx_page (page_id),
+  INDEX idx_urutan (urutan)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ── Tabel: activity_log ───────────────────────────────────────────────────────

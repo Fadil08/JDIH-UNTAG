@@ -4,17 +4,6 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { Skeleton } from "../components/ui/skeleton";
 import { useTentangPage } from "../hooks/useBackend";
 
-const DEFAULT_VISI =
-  "Menjadi pusat dokumentasi dan informasi hukum kampus yang terpercaya, mudah diakses, dan bermanfaat bagi civitas akademika Universitas 17 Agustus 1945 Banyuwangi.";
-
-const DEFAULT_MISI = [
-  "Membangun sistem dokumentasi hukum kampus yang terstruktur, lengkap, dan mudah diakses",
-  "Melakukan pengelolaan dan pemutakhiran data produk hukum secara berkala dan konsisten",
-  "Menyebarluaskan informasi hukum kepada seluruh civitas akademika UNTAG Banyuwangi",
-  "Mendukung penegakan hukum dan tata kelola universitas yang transparan dan akuntabel",
-  "Menjalin koordinasi dan sinkronisasi dengan JDIHN pusat dan jaringan JDIH perguruan tinggi",
-];
-
 export function TentangVisiMisi() {
   const { data: page, isLoading } = useTentangPage("visiMisi");
 
@@ -23,14 +12,14 @@ export function TentangVisiMisi() {
       page?.konten?.blocks?.find((b) => b.__kind__ === "paragraf") as
         | { __kind__: "paragraf"; paragraf: string }
         | undefined
-    )?.paragraf ?? DEFAULT_VISI;
+    )?.paragraf ?? "";
 
   const misi: string[] =
     (
       page?.konten?.blocks?.find((b) => b.__kind__ === "daftarItem") as
         | { __kind__: "daftarItem"; daftarItem: string[] }
         | undefined
-    )?.daftarItem ?? DEFAULT_MISI;
+    )?.daftarItem ?? [];
 
   return (
     <Layout>

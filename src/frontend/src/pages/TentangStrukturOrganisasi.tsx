@@ -10,39 +10,6 @@ interface StrukturMember {
   unit: string;
 }
 
-const DEFAULT_STRUKTUR: StrukturMember[] = [
-  {
-    jabatan: "Penanggung Jawab",
-    nama: "Prof. Dr. H. Teguh Sulistyo, S.H., M.H.",
-    unit: "Rektor UNTAG Banyuwangi",
-  },
-  {
-    jabatan: "Ketua JDIH",
-    nama: "Dr. Hj. Sri Wahyuni, S.H., M.H.",
-    unit: "Wakil Rektor Bidang Akademik",
-  },
-  {
-    jabatan: "Koordinator Teknis",
-    nama: "Agus Prasetyo, S.H., M.H.",
-    unit: "Kepala Biro Hukum & Kerjasama",
-  },
-  {
-    jabatan: "Pengelola Dokumen",
-    nama: "Dewi Rahmawati, S.H.",
-    unit: "Staf Biro Hukum",
-  },
-  {
-    jabatan: "Anggota",
-    nama: "Rian Hidayat, S.Kom.",
-    unit: "UPT Teknologi Informasi",
-  },
-  {
-    jabatan: "Anggota",
-    nama: "Siti Nurhayati, A.Md.",
-    unit: "Staf Biro Akademik",
-  },
-];
-
 function parseStrukturItem(raw: string): StrukturMember {
   const parts: Record<string, string> = {};
   for (const seg of raw.split(" | ")) {
@@ -69,7 +36,7 @@ export function TentangStrukturOrganisasi() {
 
   const struktur: StrukturMember[] = rawItems
     ? rawItems.map(parseStrukturItem).filter((m) => m.jabatan || m.nama)
-    : DEFAULT_STRUKTUR;
+    : [];
 
   return (
     <Layout>
