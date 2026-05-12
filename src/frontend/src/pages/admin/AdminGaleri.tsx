@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import api from "../../api";
+import api, { getFileUrl } from "../../api";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { SkeletonList } from "../../components/ui/LoadingSpinner";
@@ -102,7 +102,7 @@ function GaleriImageWidget({
         {displayUrl ? (
           <div className="relative rounded-lg overflow-hidden border border-border">
             <img
-              src={displayUrl}
+              src={getFileUrl(displayUrl)}
               alt="Pratinjau foto"
               className="w-full h-44 object-cover"
             />
@@ -349,7 +349,7 @@ export function AdminGaleri() {
                   {/* Thumbnail */}
                   {imgUrl ? (
                     <img
-                      src={imgUrl}
+                      src={getFileUrl(imgUrl)}
                       alt={item.judul}
                       className="w-full aspect-square object-cover"
                     />

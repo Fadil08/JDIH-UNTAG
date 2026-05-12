@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { ExternalLink, Mail, MapPin, Phone, Scale } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import api, { API_BASE } from "@/api";
+import api, { API_BASE, getFileUrl } from "@/api";
 
 const FOOTER_LINKS = [
   { label: "Beranda", to: "/" },
@@ -39,7 +39,7 @@ export function Footer() {
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
               {settings?.logo_url ? (
-                <img src={settings.logo_url.startsWith('http') ? settings.logo_url : API_BASE + settings.logo_url} alt="Logo" className="w-9 h-9 object-contain bg-white rounded p-1" />
+                <img src={getFileUrl(settings.logo_url)} alt="Logo" className="w-9 h-9 object-contain bg-white rounded p-1" />
               ) : (
                 <div className="w-9 h-9 bg-accent rounded flex items-center justify-center flex-shrink-0">
                   <Scale className="w-5 h-5 text-accent-foreground" />

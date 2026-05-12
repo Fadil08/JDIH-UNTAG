@@ -46,7 +46,7 @@ import {
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import api from "../../api";
+import api, { getFileUrl } from "../../api";
 import { usePermissions } from "../../hooks/usePermissions";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { ErrorState } from "../../components/ui/ErrorState";
@@ -168,7 +168,7 @@ function ImageUploadWidget({
         {displayUrl ? (
           <div className="relative rounded-lg overflow-hidden border border-border">
             <img
-              src={displayUrl}
+              src={getFileUrl(displayUrl)}
               alt="Pratinjau gambar"
               className="w-full h-40 object-cover"
             />
@@ -457,7 +457,7 @@ export function AdminBerita() {
                   {/* Thumbnail */}
                   {artikelGambarUrl ? (
                     <img
-                      src={artikelGambarUrl}
+                      src={getFileUrl(artikelGambarUrl)}
                       alt={artikel.judul}
                       className="w-14 h-14 rounded object-cover border border-border shrink-0 hidden sm:block"
                     />

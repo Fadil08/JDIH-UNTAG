@@ -40,7 +40,7 @@ import {
 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import api from "../../api";
+import api, { getFileUrl } from "../../api";
 import type { DokumenInput, backendInterface } from "../../backend.d";
 import { StatusDokumen as StatusEnum } from "../../backend.d";
 import { EmptyState } from "../../components/ui/EmptyState";
@@ -883,7 +883,7 @@ export function AdminDokumen() {
                             try {
                               await api.dokumen.download(doc.id);
                             } catch { /* ignore counter error */ }
-                            window.open(doc.filePdf!, '_blank');
+                            window.open(getFileUrl(doc.filePdf), '_blank');
                           }}
                           data-ocid={`admin_dokumen.download_button.${idx + 1}`}
                         >

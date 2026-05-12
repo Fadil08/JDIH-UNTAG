@@ -14,7 +14,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import api, { API_BASE } from "@/api";
+import api, { API_BASE, getFileUrl } from "@/api";
 import {
   BookOpen,
   Building2,
@@ -92,7 +92,7 @@ export function Header() {
             data-ocid="header.logo_link"
           >
             {settings?.logo_url ? (
-              <img src={settings.logo_url.startsWith('http') ? settings.logo_url : API_BASE + settings.logo_url} alt="Logo" className="w-10 h-10 object-contain bg-white rounded p-1" />
+              <img src={getFileUrl(settings.logo_url)} alt="Logo" className="w-10 h-10 object-contain bg-white rounded p-1" />
             ) : (
               <div className="flex-shrink-0 w-9 h-9 bg-accent rounded flex items-center justify-center">
                 <Scale className="w-5 h-5 text-accent-foreground" />
@@ -223,7 +223,7 @@ export function Header() {
                 <div className="flex flex-col h-full">
                   <div className="flex items-center gap-2.5 px-5 py-5 border-b border-border/40 bg-muted/30">
                     {settings?.logo_url ? (
-                      <img src={settings.logo_url.startsWith('http') ? settings.logo_url : API_BASE + settings.logo_url} alt="Logo" className="w-9 h-9 object-contain bg-white rounded p-1 shadow-sm" />
+                      <img src={getFileUrl(settings.logo_url)} alt="Logo" className="w-9 h-9 object-contain bg-white rounded p-1 shadow-sm" />
                     ) : (
                       <div className="w-8 h-8 bg-accent rounded flex items-center justify-center shadow-sm">
                         <Scale className="w-4 h-4 text-accent-foreground" />

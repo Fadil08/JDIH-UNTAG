@@ -1,6 +1,6 @@
 import { Loader2, Scale } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import api, { API_BASE } from "../../api";
+import api, { API_BASE, getFileUrl } from "../../api";
 
 interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg";
@@ -31,9 +31,7 @@ export function LoadingSpinner({
     staleTime: 5 * 60 * 1000,
   });
 
-  const logoUrl = settings?.logo_url 
-    ? (settings.logo_url.startsWith('http') ? settings.logo_url : API_BASE + settings.logo_url)
-    : null;
+  const logoUrl = settings?.logo_url ? getFileUrl(settings.logo_url) : null;
 
   return (
     <div

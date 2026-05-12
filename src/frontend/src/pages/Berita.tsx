@@ -6,6 +6,7 @@ import { ErrorState } from "../components/ui/ErrorState";
 import { PageHeader } from "../components/ui/PageHeader";
 import { useBerita } from "../hooks/useBackend";
 import type { Artikel } from "../types";
+import { getFileUrl } from "../api";
 
 
 // ─── Skeleton Grid ────────────────────────────────────────────────────────────
@@ -54,7 +55,7 @@ function ArtikelCard({ artikel, index }: { artikel: Artikel; index: number }) {
       {/* Cover image / placeholder */}
       {coverUrl ? (
         <img
-          src={coverUrl}
+          src={getFileUrl(coverUrl)}
           alt={artikel.judul}
           className="h-56 w-full object-cover"
           onError={(e) => {

@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Loader2, Save, Upload, X, Settings as SettingsIcon } from "lucide-react";
 
-import { api, API_BASE } from "../../api";
+import { api, API_BASE, getFileUrl } from "../../api";
 import { usePermissions } from "../../hooks/usePermissions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +41,7 @@ export function AdminSettings() {
         contact_phone: settings.contact_phone || "",
         logo: null,
       });
-      setPreviewLogo(settings.logo_url ? (settings.logo_url.startsWith('http') ? settings.logo_url : API_BASE + settings.logo_url) : null);
+      setPreviewLogo(settings.logo_url ? getFileUrl(settings.logo_url) : null);
     }
   }, [settings]);
 

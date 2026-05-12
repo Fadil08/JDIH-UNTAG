@@ -8,6 +8,7 @@ import { Layout } from "../components/layout/Layout";
 import { PageHeader } from "../components/ui/PageHeader";
 import { useGaleri } from "../hooks/useBackend";
 import type { GaleriItem } from "../api";
+import { getFileUrl } from "../api";
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
@@ -48,7 +49,7 @@ function GaleriCard({
     >
       {imgUrl ? (
         <img
-          src={imgUrl}
+          src={getFileUrl(imgUrl)}
           alt={item.judul}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           onError={(e) => {
@@ -107,7 +108,7 @@ function Lightbox({
           {/* Image */}
           {imgUrl ? (
             <img
-              src={imgUrl}
+              src={getFileUrl(imgUrl)}
               alt={item.judul}
               className="w-full max-h-[70vh] object-contain bg-muted"
             />

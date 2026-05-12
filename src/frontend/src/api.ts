@@ -3,6 +3,18 @@
 
 export const API_BASE = import.meta.env.VITE_API_URL ?? 'https://jdih-untag-api.vercel.app';
 
+/**
+ * Normalisasi URL file. Jika sudah absolute (http/https), kembalikan apa adanya.
+ * Jika relative, tambahkan prefix API_BASE.
+ */
+export function getFileUrl(path: string | null | undefined): string {
+  if (!path) return '';
+  if (path.startsWith('http') || path.startsWith('blob:')) return path;
+  const baseUrl = API_BASE.replace(/\/$/, '');
+  const relativePath = path.startsWith('/') ? path : `/${path}`;
+  return `${baseUrl}${relativePath}`;
+}
+
 // ── Token helpers ─────────────────────────────────────────────────────────────
 
 export function getToken(): string | null {

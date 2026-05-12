@@ -12,7 +12,7 @@ import {
   Tag,
 } from "lucide-react";
 import { useCallback, useState } from "react";
-import { api, API_BASE } from "../api";
+import { api, API_BASE, getFileUrl } from "../api";
 import { Layout } from "../components/layout/Layout";
 import { BreadcrumbNav } from "../components/ui/BreadcrumbNav";
 import { ErrorState } from "../components/ui/ErrorState";
@@ -37,7 +37,7 @@ function useDownloadDokumen() {
         await api.dokumen.download(id).catch(() => null);
         // Open the file
         if (filePdf) {
-          window.open(API_BASE + filePdf, "_blank", "noopener,noreferrer");
+          window.open(getFileUrl(filePdf), "_blank", "noopener,noreferrer");
         } else {
           alert(`Dokumen "${judul}" belum tersedia untuk diunduh.`);
         }
@@ -322,7 +322,7 @@ export function DokumenDetail() {
                   </Button>
                 </div>
                 <iframe
-                  src={API_BASE + dokumen.filePdf}
+                  src={getFileUrl(dokumen.filePdf)}
                   className="w-full flex-1 border-0"
                   title={`Preview ${dokumen.judul}`}
                 />

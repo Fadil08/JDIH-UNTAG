@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-import { api, API_BASE } from "../../api";
+import { api, API_BASE, getFileUrl } from "../../api";
 import { useDokumenAdmin, usePublishDokumen, useReturnToDraft } from "../../hooks/useBackend";
 import { usePermissions } from "../../hooks/usePermissions";
 import { EmptyState } from "../../components/ui/EmptyState";
@@ -452,7 +452,7 @@ export function AdminVerifikasi() {
                           className="w-full text-xs font-bold h-9"
                           onClick={() =>
                             window.open(
-                              API_BASE + doc.filePdf,
+                              getFileUrl(doc.filePdf),
                               "_blank"
                             )
                           }

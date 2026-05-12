@@ -32,6 +32,7 @@ import {
   useGaleri,
   useStatistik,
 } from "../hooks/useBackend";
+import { getFileUrl } from "../api";
 import { useSEO } from "../hooks/useSEO";
 import type { GaleriItem } from "../types";
 import { JENIS_LABEL } from "../types";
@@ -65,7 +66,7 @@ function GaleriPreviewCard({
     >
       {imgUrl ? (
         <img
-          src={imgUrl}
+          src={getFileUrl(imgUrl)}
           alt={item.judul}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           onError={(e) => {
@@ -117,7 +118,7 @@ function GaleriLightbox({
           </button>
           {imgUrl ? (
             <img
-              src={imgUrl}
+              src={getFileUrl(imgUrl)}
               alt={item.judul}
               className="w-full max-h-[70vh] object-contain bg-muted"
             />

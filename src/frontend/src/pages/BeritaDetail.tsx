@@ -10,6 +10,7 @@ import { PageHeader } from "../components/ui/PageHeader";
 import { useBerita, useBeritaDetail } from "../hooks/useBackend";
 import { useSEO } from "../hooks/useSEO";
 import { formatTanggalIndonesia } from "../lib/utils";
+import { getFileUrl } from "../api";
 // ─── Content Renderer ─────────────────────────────────────────────────────────
 
 function ArticleContent({ isi }: { isi: string }) {
@@ -103,7 +104,7 @@ function BeritaTerbaruSidebar({ currentId }: { currentId: string | number }) {
         >
           <div className="w-20 h-20 rounded-md overflow-hidden bg-secondary/50 flex-shrink-0 border border-border/50">
             {a.gambar ? (
-              <img src={a.gambar} alt={a.judul} className="w-full h-full object-cover" />
+              <img src={getFileUrl(a.gambar)} alt={a.judul} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
                 <Newspaper className="w-6 h-6 text-muted-foreground/30" />
@@ -212,7 +213,7 @@ export function BeritaDetail() {
               {coverUrl && (
                 <div className="mb-8 rounded-xl overflow-hidden border border-border/50 shadow-sm">
                   <img
-                    src={coverUrl}
+                    src={getFileUrl(coverUrl)}
                     alt={artikel.judul}
                     className="w-full max-h-[400px] object-cover"
                     onError={(e) => {
