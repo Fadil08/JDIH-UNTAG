@@ -140,6 +140,12 @@ const MODULE_GROUPS: ModulGroup[] = [
     ],
   },
   {
+    key: "kontak",
+    label: "Informasi Kontak",
+    icon: "📞",
+    actions: [{ key: "kontak:edit", label: "Edit" }],
+  },
+  {
     key: "activityLog",
     label: "Log Aktivitas",
     icon: "📜",

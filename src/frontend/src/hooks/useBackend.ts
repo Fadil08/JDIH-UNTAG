@@ -329,6 +329,27 @@ export function useUpdateTentangPage() {
   });
 }
 
+// ── Kontak ────────────────────────────────────────────────────────────────────
+
+export function useKontakInfo() {
+  return useQuery({
+    queryKey: ['kontakInfo'],
+    queryFn: () => api.kontak.list(),
+    staleTime: 60_000,
+    select: (d) => d ?? [],
+  });
+}
+
+export function useUpdateKontakInfo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (items: KontakInfo[]) => api.kontak.update(items),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['kontakInfo'] });
+    },
+  });
+}
+
 // ── Admin Users ───────────────────────────────────────────────────────────────
 
 export function useAdminUsers() {

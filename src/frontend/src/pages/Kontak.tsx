@@ -2,34 +2,13 @@ import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { Layout } from "../components/layout/Layout";
 import { PageHeader } from "../components/ui/PageHeader";
 
-const CONTACT_INFO = [
-  {
-    icon: MapPin,
-    label: "Alamat",
-    value: "Jl. Adi Sucipto No. 26, Banyuwangi, Jawa Timur 68416",
-    description: "Kampus Universitas 17 Agustus 1945 Banyuwangi",
-  },
-  {
-    icon: Phone,
-    label: "Telepon",
-    value: "+62 333 415032",
-    description: "Jam kerja Senin–Jumat",
-  },
-  {
-    icon: Mail,
-    label: "Email",
-    value: "jdih@untag-banyuwangi.ac.id",
-    description: "Direspons dalam 1–2 hari kerja",
-  },
-  {
-    icon: Clock,
-    label: "Jam Operasional",
-    value: "Senin – Jumat, 08.00 – 16.00 WIB",
-    description: "Sabtu & Minggu libur",
-  },
-];
+import { useKontakInfo } from "../hooks/useBackend";
+import { Skeleton } from "../components/ui/skeleton";
+
+const ICON_MAP: Record<string, any> = { MapPin, Phone, Mail, Clock };
 
 export function Kontak() {
+  const { data: contacts, isLoading } = useKontakInfo();
   return (
     <Layout>
       <PageHeader
@@ -57,27 +36,34 @@ export function Kontak() {
               className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-10"
               data-ocid="kontak.info_section"
             >
-              {CONTACT_INFO.map((item) => (
-                <div
-                  key={item.label}
-                  className="bg-card border border-border rounded-xl p-6 flex items-start gap-4 shadow-card hover:border-primary/30 transition-smooth"
-                >
-                  <div className="w-11 h-11 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <item.icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <div className="min-w-0">
-                    <dt className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
-                      {item.label}
-                    </dt>
-                    <dd className="text-sm font-semibold text-foreground break-words">
-                      {item.value}
-                    </dd>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {item.description}
-                    </p>
-                  </div>
-                </div>
-              ))}
+              {isLoading
+                ? [1, 2, 3, 4].map((i) => (
+                    <Skeleton key={i} className="h-28 w-full rounded-xl" />
+                  ))
+                : contacts?.map((item) => {
+                    const Icon = ICON_MAP[item.icon] || MapPin;
+                    return (
+                      <div
+                        key={item.label}
+                        className="bg-card border border-border rounded-xl p-6 flex items-start gap-4 shadow-card hover:border-primary/30 transition-smooth"
+                      >
+                        <div className="w-11 h-11 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <Icon className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="min-w-0">
+                          <dt className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
+                            {item.label}
+                          </dt>
+                          <dd className="text-sm font-semibold text-foreground break-words">
+                            {item.value}
+                          </dd>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {item.deskripsi}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
             </div>
 
             {/* Identity Card */}

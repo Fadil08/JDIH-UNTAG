@@ -42,6 +42,7 @@ app.use('/api/dokumen', require('./routes/dokumen'));
 app.use('/api/berita', require('./routes/berita'));
 app.use('/api/galeri', require('./routes/galeri'));
 app.use('/api/tentang', require('./routes/tentang'));
+app.use('/api/kontak', require('./routes/kontak'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/roles', require('./routes/roles'));
 app.use('/api/statistik', require('./routes/statistik'));

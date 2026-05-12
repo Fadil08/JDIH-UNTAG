@@ -192,6 +192,15 @@ export interface GaleriItemInput {
   gambar?: File;
 }
 
+export interface KontakInfo {
+  id?: number;
+  label: string;
+  value: string;
+  deskripsi?: string;
+  icon: string;
+  urutan?: number;
+}
+
 export interface TentangBlock {
   __kind__: 'paragraf' | 'daftarItem';
   paragraf?: string;
@@ -526,6 +535,14 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify(input),
       }),
+  },
+
+  // ── Kontak ────────────────────────────────────────────────────────────────────
+
+  kontak: {
+    list: () => apiFetch<KontakInfo[]>('/api/kontak'),
+    update: (items: KontakInfo[]) =>
+      apiFetch<KontakInfo[]>('/api/kontak', { method: 'PUT', body: JSON.stringify(items) }),
   },
 
   // ── Users ─────────────────────────────────────────────────────────────────────

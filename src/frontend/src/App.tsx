@@ -103,6 +103,11 @@ const AdminTentang = lazy(() =>
     default: m.AdminTentang,
   })),
 );
+const AdminKontak = lazy(() =>
+  import("./pages/admin/AdminKontak").then((m) => ({
+    default: m.AdminKontak,
+  })),
+);
 const AdminGaleri = lazy(() =>
   import("./pages/admin/AdminGaleri").then((m) => ({
     default: m.AdminGaleri,
@@ -386,6 +391,16 @@ const adminTentangRoute = createRoute({
   ),
 });
 
+const adminKontakRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin/kontak",
+  component: () => (
+    <AdminPageWrapper>
+      <AdminKontak />
+    </AdminPageWrapper>
+  ),
+});
+
 const adminRolesRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admin/roles",
@@ -463,6 +478,7 @@ const routeTree = rootRoute.addChildren([
   adminUsersRoute,
   adminRolesRoute,
   adminTentangRoute,
+  adminKontakRoute,
   adminGaleriRoute,
   adminVerifikasiRoute,
   adminSettingsRoute,

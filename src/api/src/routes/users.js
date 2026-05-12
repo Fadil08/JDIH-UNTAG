@@ -14,6 +14,7 @@ const ALL_MENUS = [
   'userManagement:view', 'userManagement:create', 'userManagement:edit', 'userManagement:delete',
   'roleManagement:view', 'roleManagement:create', 'roleManagement:edit', 'roleManagement:delete',
   'tentang:view', 'tentang:edit',
+  'kontak:edit',
   'settings:view', 'settings:edit',
   'activityLog:view',
 ];

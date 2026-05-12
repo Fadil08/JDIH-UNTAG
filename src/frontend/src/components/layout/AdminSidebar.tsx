@@ -11,6 +11,7 @@ import {
   LayoutDashboard,
   LogOut,
   Newspaper,
+  Phone,
   ScrollText,
   Shield,
   Tag,
@@ -120,6 +121,12 @@ const menuSections: MenuSection[] = [
         path: "/admin/tentang",
         icon: <BookOpen size={18} />,
         permission: "tentang:view",
+      },
+      {
+        label: "Kelola Kontak",
+        path: "/admin/kontak",
+        icon: <Phone size={18} />,
+        permission: "kontak:edit",
       },
       {
         label: "Log Aktivitas",
