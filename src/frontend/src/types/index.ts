@@ -28,6 +28,7 @@ export type {
   RoleWithPermissions,
   RoleInput,
   PermissionOption,
+  KontakInfo,
 } from '../api';
 
 // ─── Tipe tambahan (tidak ada di api.ts) ────────────────────────────────────

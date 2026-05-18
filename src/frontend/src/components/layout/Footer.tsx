@@ -105,7 +105,7 @@ export function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start gap-2.5 text-sm text-primary-foreground/70">
                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-accent" />
-                <span>Jl. Adi Wijaya No. 46, Banyuwangi, Jawa Timur 68416</span>
+                <span>Jl. Adi Sucipto No. 26, Taman Baru, 68416, Banyuwangi - Jawa Timur</span>
               </li>
               {(settings?.contact_phone || "(0333) 424140") && (
                 <li className="flex items-center gap-2.5 text-sm text-primary-foreground/70">

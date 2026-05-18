@@ -76,7 +76,7 @@ export function Kontak() {
                   JDIH UNTAG Banyuwangi
                 </h3>
                 <p className="text-sm text-primary-foreground/80 leading-relaxed">
-                  Biro Hukum &amp; Kerjasama
+                  Sekertariat Rektorat 
                   <br />
                   Universitas 17 Agustus 1945 Banyuwangi
                   <br />

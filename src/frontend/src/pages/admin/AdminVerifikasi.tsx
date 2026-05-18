@@ -323,7 +323,14 @@ export function AdminVerifikasi() {
                     </div>
 
                     <div className="mt-5 p-4 rounded-xl bg-orange-50/30 border border-orange-200/20 text-sm text-foreground/80 italic leading-relaxed">
-                      "{doc.abstrak}"
+                      {(() => {
+                        const content = doc.abstrak || "";
+                        const hasHtmlTags = /<[a-z][\s\S]*>/i.test(content);
+                        if (hasHtmlTags) {
+                          return <div dangerouslySetInnerHTML={{ __html: content }} />;
+                        }
+                        return <span>"{content}"</span>;
+                      })()}
                     </div>
 
                     <details className="mt-4 group bg-muted/30 border border-border/50 rounded-xl overflow-hidden">

@@ -6,6 +6,7 @@ import api, {
   type GaleriItemInput,
   type TentangPageInput,
   type TentangSlug,
+  type KontakInfo,
 } from '../api';
 
 // ── Invalidation ──────────────────────────────────────────────────────────────

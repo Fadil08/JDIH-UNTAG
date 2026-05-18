@@ -276,9 +276,23 @@ export function DokumenDetail() {
                 Abstrak / Ringkasan
               </h2>
               <Separator className="mb-4" />
-              <p className="text-foreground/80 text-sm leading-relaxed">
-                {dokumen.abstrak}
-              </p>
+              {(() => {
+                const content = dokumen.abstrak || "";
+                const hasHtmlTags = /<[a-z][\s\S]*>/i.test(content);
+                if (hasHtmlTags) {
+                  return (
+                    <div
+                      className="text-foreground/80 text-sm leading-relaxed space-y-3 prose prose-sm max-w-none text-justify prose-p:my-2"
+                      dangerouslySetInnerHTML={{ __html: content }}
+                    />
+                  );
+                }
+                return (
+                  <p className="text-foreground/80 text-sm leading-relaxed whitespace-pre-line text-justify">
+                    {content}
+                  </p>
+                );
+              })()}
             </div>
 
             {/* Tags */}
