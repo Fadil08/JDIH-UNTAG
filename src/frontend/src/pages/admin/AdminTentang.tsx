@@ -372,8 +372,9 @@ function StrukturEditor({ blocks, onChange }: StrukturEditorProps) {
       </div>
       <div className="space-y-3">
         {members.map((m, idx) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: ordered list, never reordered in-place
           <div
-            key={`member-${idx}-${m.jabatan.slice(0, 8)}`}
+            key={idx}
             className="border border-border rounded-lg p-3 bg-background space-y-2"
           >
             <div className="flex items-center justify-between">
