@@ -17,7 +17,7 @@ import {
   RotateCcw,
   Search,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Layout } from "../components/layout/Layout";
 import { EmptyState } from "../components/ui/EmptyState";
 import { ErrorState } from "../components/ui/ErrorState";
@@ -337,7 +337,9 @@ export function Katalog() {
   });
 
   const searchParams = useSearch({ strict: false }) as any;
+  // ?q=<query text>  and  ?kategori=<category display name>
   const initialQuery = searchParams?.q || "";
+  const urlKategoriNama: string = searchParams?.kategori || "";
 
   const [filter, setFilter] = useState<FilterDokumen>({ ...DEFAULT_FILTER, query: initialQuery });
   const [inputQuery, setInputQuery] = useState(initialQuery);
@@ -346,6 +348,28 @@ export function Katalog() {
   const { data: dokumenList, isLoading, isError, refetch } = useDokumen(filter);
   const { data: kategoriList } = useKategori();
   const { data: statusList } = useStatus();
+
+  // Once kategoriList is loaded, resolve the URL category name to its DB ID and apply filter
+  useEffect(() => {
+    if (!urlKategoriNama || !kategoriList || kategoriList.length === 0) return;
+    const match = kategoriList.find(
+      (k) => k.nama.toLowerCase() === urlKategoriNama.toLowerCase(),
+    );
+    if (match) {
+      setFilter((prev) => ({
+        ...prev,
+        jenis: String(match.id),
+        kategoriId: Number(match.id),
+      }));
+    }
+  }, [urlKategoriNama, kategoriList]);
+
+  // Sync ?q= changes
+  useEffect(() => {
+    const q = searchParams?.q || "";
+    setInputQuery(q);
+    setFilter((prev) => ({ ...prev, query: q }));
+  }, [searchParams?.q]);
 
   const filterKategoriItems =
     kategoriList && kategoriList.length > 0

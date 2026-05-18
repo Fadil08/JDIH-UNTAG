@@ -370,6 +370,7 @@ export function Beranda() {
                 <Link
                   key={key}
                   to="/katalog"
+                  search={{ kategori: label }}
                   className="bg-card border border-border rounded-lg p-4 text-center hover:border-primary/40 hover:shadow-card transition-smooth group flex flex-col items-center gap-2"
                   data-ocid={`beranda.kategori_card.${idx + 1}`}
                 >
